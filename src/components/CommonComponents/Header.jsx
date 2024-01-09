@@ -79,7 +79,8 @@ function Header() {
     navigate("/Transaction");
   };
 
-  const handleClickEvent =async(Id)=>{
+  const handleClickEvent =async(menu)=>{
+    console.log(menu);
     handleMenuList()
   }
   return (
@@ -177,7 +178,7 @@ function Header() {
                 menu
                   .filter((menuList) => menuList.iParentId === menuId)
                   .map((menuList, index) => (
-                    <MenuItem key={menuList.iId} onClick={()=>handleClickEvent(menuList.iId)} >{menuList.sName}</MenuItem>
+                    <MenuItem key={menuList.iId} onClick={()=>handleClickEvent(menuList)} >{menuList.sName}</MenuItem>
                   ))}
               
               </Menu>

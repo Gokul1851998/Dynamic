@@ -44,3 +44,14 @@ export const getLogin = async (payload) => {
       console.log('GetTransactionSummary',error);
     }
   };
+
+  export const getTransactionDetails = async (payload) => {
+    try {
+      const response = await axios.get(`${baseUrl}GetTransactionDetails`, {
+        params: payload,
+      });
+      return response?.data;
+    } catch (error) {
+      console.log('GetTransactionDetails',error);
+    }
+  };
