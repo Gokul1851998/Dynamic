@@ -80,7 +80,7 @@ function Header() {
   };
 
   const handleClickEvent =async(menu)=>{
-    console.log(menu);
+    navigate('/summary',{state:menu?.iDoctype})
     handleMenuList()
   }
   return (
@@ -89,7 +89,7 @@ function Header() {
         position="static"
         sx={{
           bgcolor: "#8c99e0",
-          boxShadow: "0px 5px 15px rgba(0, 0, 0, 0.5)", // Changed the vertical offset to 5px
+          boxShadow: "0px 5px 15px rgba(0, 0, 0, 0.3)", // Changed the vertical offset to 5px
         }}
       >
         <Container maxWidth="xl">

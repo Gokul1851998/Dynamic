@@ -16,20 +16,23 @@ import Paper from "@mui/material/Paper";
 import Checkbox from "@mui/material/Checkbox";
 import IconButton from "@mui/material/IconButton";
 import Tooltip from "@mui/material/Tooltip";
-import EditIcon from '@mui/icons-material/Edit';
+import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
-import AddIcon from '@mui/icons-material/Add';
+import AddIcon from "@mui/icons-material/Add";
 import { visuallyHidden } from "@mui/utils";
 import "./PurchaseTable.css";
-import { getTransactionDetails, getTransactionSummary } from "../../api/ApiCall";
+import {
+  getTransactionDetails,
+  getTransactionSummary,
+} from "../../api/ApiCall";
 import Loader from "../Loader/Loader";
 import { Button, ButtonGroup, TextField } from "@mui/material";
-import PrintIcon from '@mui/icons-material/Print';
-import CloseIcon from '@mui/icons-material/Close';
+import PrintIcon from "@mui/icons-material/Print";
+import CloseIcon from "@mui/icons-material/Close";
 
-import SendIcon from '@mui/icons-material/Send';
-import Stack from '@mui/material/Stack';
-
+import SendIcon from "@mui/icons-material/Send";
+import Stack from "@mui/material/Stack";
+import { useLocation, useNavigate } from "react-router-dom";
 
 function descendingComparator(a, b, orderBy) {
   if (b[orderBy] < a[orderBy]) {
@@ -74,9 +77,23 @@ function EnhancedTableHead(props) {
   };
 
   return (
-    <TableHead>
+    <TableHead
+      style={{
+        backgroundColor: "#8c99e0",
+        position: "sticky",
+        top: 0,
+        zIndex: "5",
+      }}
+    >
       <TableRow>
-        <TableCell padding="checkbox">
+        <TableCell
+          sx={{
+            padding: "4px",
+            border: "1px solid #ddd",
+            whiteSpace: "nowrap",
+          }}
+          padding="checkbox"
+        >
           <Checkbox
             color="primary"
             checked={rowCount > 0 && numSelected === rowCount}
@@ -87,9 +104,7 @@ function EnhancedTableHead(props) {
           />
         </TableCell>
         {rows.map((header, index) => {
-          if (
-            header !== "iTransId" && header !=="sNarration"
-          ) {
+          if (header !== "iTransId" && header !== "sNarration") {
             // Exclude "iId", "iAssetType", and "sAltName" from the header
             return (
               <TableCell
@@ -100,7 +115,7 @@ function EnhancedTableHead(props) {
                 sortDirection={orderBy === header ? order : false}
               >
                 <TableSortLabel
-                  className="text-white"
+                 sx={{color:'#fff'}}
                   active={orderBy === header}
                   direction={orderBy === header ? order : "asc"}
                   onClick={createSortHandler(header)}
@@ -140,22 +155,18 @@ function EnhancedTableToolbar(props) {
       sx={{
         pl: { sm: 2 },
         pr: { xs: 1, sm: 1 },
-   
       }}
     >
-     
-        <Typography
-          sx={{ flex: "1 1 100%" }}
-          variant="h6"
-          id="tableTitle"
-          component="div"
-        >
-          Purchase
-        </Typography>
-   
+      <Typography
+        sx={{ flex: "1 1 100%" }}
+        variant="h6"
+        id="tableTitle"
+        component="div"
+      >
+        Purchase
+      </Typography>
 
-    
-        <TextField
+      <TextField
         id="search"
         label="Search"
         variant="outlined"
@@ -163,7 +174,6 @@ function EnhancedTableToolbar(props) {
         onChange={changes}
         size="small"
       />
-   
     </Toolbar>
   );
 }
@@ -174,6 +184,9 @@ EnhancedTableToolbar.propTypes = {
 
 export default function PurchaseTable() {
   const iUser = localStorage.getItem("userId");
+  const navigate = useNavigate()
+  const location = useLocation();
+  const iDocType = location.state;
   const [order, setOrder] = React.useState("asc");
   const [orderBy, setOrderBy] = React.useState(0);
   const [selected, setSelected] = React.useState([]);
@@ -181,14 +194,14 @@ export default function PurchaseTable() {
   const [dense, setDense] = React.useState(true);
   const [searchQuery, setSearchQuery] = React.useState("");
   const [rowsPerPage, setRowsPerPage] = React.useState(10);
-  const [data, setData] = React.useState([])
-  const [sortDir, setSortDir] = React.useState("asc")
+  const [data, setData] = React.useState([]);
+  const [sortDir, setSortDir] = React.useState("asc");
   const [open, setOpen] = React.useState(false);
 
   const buttonStyle = {
-    textTransform: 'none', // Set text transform to none for normal case
-    color: '#FFFFFF',      // Set text color
-    backgroundColor: '#7581c6', // Set background color
+    textTransform: "none", // Set text transform to none for normal case
+    color: "#FFFFFF", // Set text color
+    backgroundColor: "#7581c6", // Set background color
   };
 
   const handleClose = () => {
@@ -199,32 +212,31 @@ export default function PurchaseTable() {
   };
 
   const fetchData = async () => {
-    handleOpen()
+    handleOpen();
     const response = await getTransactionSummary({
       DisplayLength: rowsPerPage,
       DisplayStart: 0,
       SortCol: orderBy,
       SortDir: order,
       iUser,
-      iDocType: 2,
+      iDocType: iDocType,
       Search: searchQuery,
     });
-     if(response?.Status === "Success"){
-      const myObject = JSON.parse(response?.ResultData)
-      setData(myObject?.Table)
-     }
-     handleClose()
+    if (response?.Status === "Success") {
+      const myObject = JSON.parse(response?.ResultData);
+      setData(myObject?.Table);
+    }
+    handleClose();
   };
 
   React.useEffect(() => {
     fetchData();
   }, [searchQuery]);
 
-
   const handleRequestSort = (event, property) => {
     // console.log(property);
     // const isAsc = orderBy === property && order === "asc";
-    setOrder(orderBy   ? "desc" : "asc");
+    setOrder(orderBy ? "desc" : "asc");
     setOrderBy(property);
   };
 
@@ -273,8 +285,7 @@ export default function PurchaseTable() {
 
   // Avoid a layout jump when reaching the last page with empty rows.
 
-
-    const filteredRows = data.filter((row) =>
+  const filteredRows = data.filter((row) =>
     Object.values(row).some((value) => {
       if (typeof value === "string") {
         return value.toLowerCase().includes(searchQuery.toLowerCase());
@@ -292,37 +303,74 @@ export default function PurchaseTable() {
         page * rowsPerPage,
         page * rowsPerPage + rowsPerPage
       ),
-    [order, orderBy, page, rowsPerPage,data]
+    [order, orderBy, page, rowsPerPage, data]
   );
 
+  const handleNewDetailPage =()=>{
+    navigate('/detail')
+  }
+
   return (
-    <Box sx={{ margin: 0, background: "#8c99e0", height: "200px",boxShadow: "0px 5px 15px rgba(0, 0, 0, 0.5)" }}>
-       
+    <Box
+      sx={{
+        margin: 0,
+        background: "#8c99e0",
+        height: "200px",
+        boxShadow: "0px 5px 15px rgba(0, 0, 0, 0.5)",
+      }}
+    >
       <Box
         sx={{
           width: "auto",
-          paddingLeft:5,
-          paddingRight:5,
+          paddingLeft: 5,
+          paddingRight: 5,
           zIndex: 1,
         }}
       >
-       <Stack  direction="row" spacing={1}  padding={1} justifyContent="flex-end">
-      <Button variant="contained"  startIcon={<AddIcon />} style={buttonStyle}>
-        New
-      </Button>
-      <Button variant="contained" disabled={selected.length !== 1}  startIcon={<EditIcon />} style={buttonStyle}>
-        Edit
-      </Button>
-      <Button variant="contained" disabled={selected.length <= 0} startIcon={<DeleteIcon />} style={buttonStyle}>
-        Delete
-      </Button>
-      <Button variant="contained"  startIcon={<PrintIcon />} style={buttonStyle}>
-        Print
-      </Button>
-      <Button variant="contained" startIcon={<CloseIcon />} style={buttonStyle}>
-        Close
-      </Button>
-    </Stack>
+        <Stack
+          direction="row"
+          spacing={1}
+          padding={1}
+          justifyContent="flex-end"
+        >
+          <Button onClick={handleNewDetailPage}
+            variant="contained"
+            startIcon={<AddIcon />}
+            style={buttonStyle}
+          >
+            New
+          </Button>
+          <Button
+            variant="contained"
+            disabled={selected.length !== 1}
+            startIcon={<EditIcon />}
+            style={buttonStyle}
+          >
+            Edit
+          </Button>
+          <Button
+            variant="contained"
+            disabled={selected.length <= 0}
+            startIcon={<DeleteIcon />}
+            style={buttonStyle}
+          >
+            Delete
+          </Button>
+          <Button
+            variant="contained"
+            startIcon={<PrintIcon />}
+            style={buttonStyle}
+          >
+            Print
+          </Button>
+          <Button
+            variant="contained"
+            startIcon={<CloseIcon />}
+            style={buttonStyle}
+          >
+            Close
+          </Button>
+        </Stack>
 
         <Paper
           sx={{
@@ -331,24 +379,28 @@ export default function PurchaseTable() {
             boxShadow: "0px 5px 15px rgba(0, 0, 0, 0.3)",
           }}
         >
-          <EnhancedTableToolbar numSelected={selected.length} values={searchQuery} changes={handleSearch} />
+          <EnhancedTableToolbar
+            numSelected={selected.length}
+            values={searchQuery}
+            changes={handleSearch}
+          />
           {data.length > 0 && (
-          <TableContainer
-            style={{
-              display: "block",
-              maxHeight: "calc(100vh - 400px)",
-              overflowY: "auto",
-              scrollbarWidth: "thin",
-              scrollbarColor: "#888 #f5f5f5",
-              scrollbarTrackColor: "#f5f5f5",
-            }}
-          >
-            <Table
-              sx={{ minWidth: 750 }}
-              aria-labelledby="tableTitle"
-              size={dense ? "small" : "medium"}
+            <TableContainer
+              style={{
+               
+                display: "block",
+                maxHeight: "calc(100vh - 400px)",
+                overflowY: "auto",
+                scrollbarWidth: "thin",
+                scrollbarColor: "#888 #f5f5f5",
+                scrollbarTrackColor: "#f5f5f5",
+              }}
             >
-          
+              <Table
+                sx={{ minWidth: 750 }}
+                aria-labelledby="tableTitle"
+                size={dense ? "small" : "medium"}
+              >
                 <EnhancedTableHead
                   numSelected={Object.keys(selected).length}
                   order={order}
@@ -358,64 +410,65 @@ export default function PurchaseTable() {
                   rowCount={data.length}
                   rows={Object.keys(data[0])}
                 />
-       
-              <TableBody>
-                {visibleRows.map((row, index) => {
-                  const isItemSelected = isSelected(row.iTransId);
-                  const labelId = `enhanced-table-checkbox-${index}`;
 
-                  const handleRowDoubleClick = async (event, index, iId) => {
-                    handleOpen()
-                   const response = await getTransactionDetails({
-                      iUser,
-                      iTransId : iId,
-                      iDocType:2
-                   });
-                  
-                   if (response?.Status === "Success") {
-                    const myObject = JSON.parse(response?.ResultData);
-                    console.log(myObject);
-                   }
-                   handleClose()
-                 };
+                <TableBody>
+                  {visibleRows.map((row, index) => {
+                    const isItemSelected = isSelected(row.iTransId);
+                    const labelId = `enhanced-table-checkbox-${index}`;
 
-                  return (
-                    <TableRow
-                      hover
-                      className={`table-row `}
-                      onClick={(event) => handleClick(event, row.iTransId)}
-                      onDoubleClick={(event) =>
-                        handleRowDoubleClick(event, index, row.iTransId)
+                    const handleRowDoubleClick = async (event, index, iId) => {
+                      handleOpen();
+                      const response = await getTransactionDetails({
+                        iUser,
+                        iTransId: iId,
+                        iDocType: 2,
+                      });
+
+                      if (response?.Status === "Success") {
+                        const myObject = JSON.parse(response?.ResultData);
+                        console.log(myObject);
                       }
-                      role="checkbox"
-                      aria-checked={isItemSelected}
-                      tabIndex={-1}
-                      key={row.iTransId}
-                      selected={isItemSelected}
-                      sx={{ cursor: "pointer" }}
-                    >
-                      <TableCell padding="checkbox">
-                        <Checkbox
-                          color="primary"
-                          checked={isItemSelected}
-                          inputProps={{
-                            "aria-labelledby": labelId,
-                          }}
-                        />
-                      </TableCell>
-                      {Object.keys(data[0]).map((column, index) => {
-                        if (
-                          column !== "iTransId" && column !=="sNarration"
-                        ) {
-                          return (
-                            <>
+                      handleClose();
+                    };
+
+                    return (
+                      <TableRow
+                        hover
+                        className={`table-row `}
+                        onClick={(event) => handleClick(event, row.iTransId)}
+                        onDoubleClick={(event) =>
+                          handleRowDoubleClick(event, index, row.iTransId)
+                        }
+                        role="checkbox"
+                        aria-checked={isItemSelected}
+                        tabIndex={-1}
+                        key={row.iTransId}
+                        selected={isItemSelected}
+                        sx={{ cursor: "pointer" }}
+                      >
+                        <TableCell padding="checkbox">
+                          <Checkbox
+                            color="primary"
+                            checked={isItemSelected}
+                            inputProps={{
+                              "aria-labelledby": labelId,
+                            }}
+                          />
+                        </TableCell>
+                        {Object.keys(data[0]).map((column, index) => {
+                          if (
+                            column !== "iTransId" &&
+                            column !== "sNarration"
+                          ) {
+                            return (
+                              <>
                                 <TableCell
                                   sx={{
                                     padding: "4px",
                                     border: "1px solid #ddd",
                                     whiteSpace: "nowrap",
                                   }}
-                                  key={index+labelId}
+                                  key={index + labelId}
                                   component="th"
                                   id={labelId}
                                   scope="row"
@@ -424,18 +477,17 @@ export default function PurchaseTable() {
                                 >
                                   {row[column]}
                                 </TableCell>
-                            </>
-                          );
-                        }
-                      })}
-                    </TableRow>
-                  );
-                })}
-             
-              </TableBody>
-            </Table>
-          </TableContainer>
-                 )}
+                              </>
+                            );
+                          }
+                        })}
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
+            </TableContainer>
+          )}
           <TablePagination
             rowsPerPageOptions={[10, 25, 50, 100]}
             component="div"
