@@ -11,7 +11,6 @@ export default function RoutesPath() {
     <Route path="/" element={<Login />} />
     <Route path="/home" element={<Home />} />
     <Route path="/summary" element={<SummaryPage />} />
-    <Route path="/detail" element={<DetailPage />} />
     </Routes>
   )
 }

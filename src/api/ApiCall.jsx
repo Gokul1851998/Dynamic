@@ -55,3 +55,25 @@ export const getLogin = async (payload) => {
       console.log('GetTransactionDetails',error);
     }
   };
+
+  export const deleteTransaction = async (payload) => {
+    try {
+      const response = await axios.get(`${baseUrl}DeleteTransaction`, {
+        params: payload,
+      });
+      return response?.data;
+    } catch (error) {
+      console.log('DeleteTransaction',error);
+    }
+  };
+
+  export const getMasters = async (payload) => {
+    try {
+      const response = await axios.get(`${baseUrl}GetMasters`, {
+        params: payload,
+      });
+      return response?.data;
+    } catch (error) {
+      console.log('GetMasters',error);
+    }
+  };

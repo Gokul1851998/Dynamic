@@ -19,20 +19,22 @@ import Tooltip from "@mui/material/Tooltip";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import AddIcon from "@mui/icons-material/Add";
+import PrintIcon from "@mui/icons-material/Print";
+import CloseIcon from "@mui/icons-material/Close";
 import { visuallyHidden } from "@mui/utils";
 import "./PurchaseTable.css";
 import {
+  deleteTransaction,
   getTransactionDetails,
   getTransactionSummary,
 } from "../../api/ApiCall";
 import Loader from "../Loader/Loader";
 import { Button, ButtonGroup, TextField } from "@mui/material";
-import PrintIcon from "@mui/icons-material/Print";
-import CloseIcon from "@mui/icons-material/Close";
-
 import SendIcon from "@mui/icons-material/Send";
 import Stack from "@mui/material/Stack";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useLocation } from "react-router-dom";
+import Swal from "sweetalert2";
+import DetailPage from "../DetailPage/DetailPage";
 
 function descendingComparator(a, b, orderBy) {
   if (b[orderBy] < a[orderBy]) {
@@ -115,7 +117,7 @@ function EnhancedTableHead(props) {
                 sortDirection={orderBy === header ? order : false}
               >
                 <TableSortLabel
-                 sx={{color:'#fff'}}
+                  sx={{ color: "#fff" }}
                   active={orderBy === header}
                   direction={orderBy === header ? order : "asc"}
                   onClick={createSortHandler(header)}
@@ -184,7 +186,6 @@ EnhancedTableToolbar.propTypes = {
 
 export default function PurchaseTable() {
   const iUser = localStorage.getItem("userId");
-  const navigate = useNavigate()
   const location = useLocation();
   const iDocType = location.state;
   const [order, setOrder] = React.useState("asc");
@@ -197,6 +198,7 @@ export default function PurchaseTable() {
   const [data, setData] = React.useState([]);
   const [sortDir, setSortDir] = React.useState("asc");
   const [open, setOpen] = React.useState(false);
+  const [navigate, setNavigate] = React.useState(false);
 
   const buttonStyle = {
     textTransform: "none", // Set text transform to none for normal case
@@ -306,8 +308,43 @@ export default function PurchaseTable() {
     [order, orderBy, page, rowsPerPage, data]
   );
 
-  const handleNewDetailPage =()=>{
-    navigate('/detail')
+  const handleDelete = async () => {
+    const ids = selected.join();
+    Swal.fire({
+      text: "Are you sure?",
+      showCancelButton: true,
+      confirmButtonColor: "#3085d6",
+      cancelButtonColor: "#d33",
+      confirmButtonText: "Yes",
+    }).then(async (result) => {
+      if (result.value) {
+        const response = await deleteTransaction({
+          iId: ids,
+          iUser,
+          iDocType,
+        });
+        if (response?.Status === "Success") {
+          Swal.fire({
+            title: "Deleted",
+            text: "Your file has been deleted!",
+            icon: "success",
+            showConfirmButton: false,
+            timer: 1500,
+          });
+          setSelected([]);
+        }
+        fetchData();
+      }
+    });
+  };
+
+  const handleNavigate = () => {
+    setNavigate(true);
+  };
+
+  const handleEditClose = () =>{
+    setSelected([])
+    setNavigate(false)
   }
 
   return (
@@ -322,182 +359,196 @@ export default function PurchaseTable() {
       <Box
         sx={{
           width: "auto",
-          paddingLeft: 5,
-          paddingRight: 5,
+          paddingLeft: 2,
+          paddingRight: 2,
           zIndex: 1,
         }}
       >
-        <Stack
-          direction="row"
-          spacing={1}
-          padding={1}
-          justifyContent="flex-end"
-        >
-          <Button onClick={handleNewDetailPage}
-            variant="contained"
-            startIcon={<AddIcon />}
-            style={buttonStyle}
-          >
-            New
-          </Button>
-          <Button
-            variant="contained"
-            disabled={selected.length !== 1}
-            startIcon={<EditIcon />}
-            style={buttonStyle}
-          >
-            Edit
-          </Button>
-          <Button
-            variant="contained"
-            disabled={selected.length <= 0}
-            startIcon={<DeleteIcon />}
-            style={buttonStyle}
-          >
-            Delete
-          </Button>
-          <Button
-            variant="contained"
-            startIcon={<PrintIcon />}
-            style={buttonStyle}
-          >
-            Print
-          </Button>
-          <Button
-            variant="contained"
-            startIcon={<CloseIcon />}
-            style={buttonStyle}
-          >
-            Close
-          </Button>
-        </Stack>
+        {!navigate ? (
+          <>
+            <Stack
+              direction="row"
+              spacing={1}
+              padding={1}
+              justifyContent="flex-end"
+            >
+              <Button
+                onClick={handleNavigate}
+                variant="contained"
+                startIcon={<AddIcon />}
+                style={buttonStyle}
+              >
+                New
+              </Button>
+              <Button
+                onClick={handleNavigate}
+                variant="contained"
+                disabled={selected.length !== 1}
+                startIcon={<EditIcon />}
+                style={buttonStyle}
+              >
+                Edit
+              </Button>
+              <Button
+                onClick={handleDelete}
+                variant="contained"
+                disabled={selected.length <= 0}
+                startIcon={<DeleteIcon />}
+                style={buttonStyle}
+              >
+                Delete
+              </Button>
+              <Button
+                variant="contained"
+                startIcon={<PrintIcon />}
+                style={buttonStyle}
+              >
+                Print
+              </Button>
+              <Button
+                variant="contained"
+                startIcon={<CloseIcon />}
+                style={buttonStyle}
+              >
+                Close
+              </Button>
+            </Stack>
 
-        <Paper
-          sx={{
-            width: "100%",
-            mb: 2,
-            boxShadow: "0px 5px 15px rgba(0, 0, 0, 0.3)",
-          }}
-        >
-          <EnhancedTableToolbar
-            numSelected={selected.length}
-            values={searchQuery}
-            changes={handleSearch}
-          />
-          {data.length > 0 && (
-            <TableContainer
-              style={{
-               
-                display: "block",
-                maxHeight: "calc(100vh - 400px)",
-                overflowY: "auto",
-                scrollbarWidth: "thin",
-                scrollbarColor: "#888 #f5f5f5",
-                scrollbarTrackColor: "#f5f5f5",
+            <Paper
+              sx={{
+                width: "100%",
+                mb: 2,
+                boxShadow: "0px 5px 15px rgba(0, 0, 0, 0.3)",
               }}
             >
-              <Table
-                sx={{ minWidth: 750 }}
-                aria-labelledby="tableTitle"
-                size={dense ? "small" : "medium"}
-              >
-                <EnhancedTableHead
-                  numSelected={Object.keys(selected).length}
-                  order={order}
-                  orderBy={orderBy}
-                  onSelectAllClick={handleSelectAllClick}
-                  onRequestSort={handleRequestSort}
-                  rowCount={data.length}
-                  rows={Object.keys(data[0])}
-                />
+              <EnhancedTableToolbar
+                numSelected={selected.length}
+                values={searchQuery}
+                changes={handleSearch}
+              />
+              {data.length > 0 && (
+                <TableContainer
+                  style={{
+                    display: "block",
+                    maxHeight: "calc(100vh - 400px)",
+                    overflowY: "auto",
+                    scrollbarWidth: "thin",
+                    scrollbarColor: "#888 #f5f5f5",
+                    scrollbarTrackColor: "#f5f5f5",
+                  }}
+                >
+                  <Table
+                    sx={{ minWidth: 750 }}
+                    aria-labelledby="tableTitle"
+                    size={dense ? "small" : "medium"}
+                  >
+                    <EnhancedTableHead
+                      numSelected={Object.keys(selected).length}
+                      order={order}
+                      orderBy={orderBy}
+                      onSelectAllClick={handleSelectAllClick}
+                      onRequestSort={handleRequestSort}
+                      rowCount={data.length}
+                      rows={Object.keys(data[0])}
+                    />
 
-                <TableBody>
-                  {visibleRows.map((row, index) => {
-                    const isItemSelected = isSelected(row.iTransId);
-                    const labelId = `enhanced-table-checkbox-${index}`;
+                    <TableBody>
+                      {visibleRows.map((row, index) => {
+                        const isItemSelected = isSelected(row.iTransId);
+                        const labelId = `enhanced-table-checkbox-${index}`;
 
-                    const handleRowDoubleClick = async (event, index, iId) => {
-                      handleOpen();
-                      const response = await getTransactionDetails({
-                        iUser,
-                        iTransId: iId,
-                        iDocType: 2,
-                      });
+                        const handleRowDoubleClick = async (
+                          event,
+                          index,
+                          iId
+                        ) => {
+                          handleOpen();
+                          const response = await getTransactionDetails({
+                            iUser,
+                            iTransId: iId,
+                            iDocType: 2,
+                          });
 
-                      if (response?.Status === "Success") {
-                        const myObject = JSON.parse(response?.ResultData);
-                        console.log(myObject);
-                      }
-                      handleClose();
-                    };
-
-                    return (
-                      <TableRow
-                        hover
-                        className={`table-row `}
-                        onClick={(event) => handleClick(event, row.iTransId)}
-                        onDoubleClick={(event) =>
-                          handleRowDoubleClick(event, index, row.iTransId)
-                        }
-                        role="checkbox"
-                        aria-checked={isItemSelected}
-                        tabIndex={-1}
-                        key={row.iTransId}
-                        selected={isItemSelected}
-                        sx={{ cursor: "pointer" }}
-                      >
-                        <TableCell padding="checkbox">
-                          <Checkbox
-                            color="primary"
-                            checked={isItemSelected}
-                            inputProps={{
-                              "aria-labelledby": labelId,
-                            }}
-                          />
-                        </TableCell>
-                        {Object.keys(data[0]).map((column, index) => {
-                          if (
-                            column !== "iTransId" &&
-                            column !== "sNarration"
-                          ) {
-                            return (
-                              <>
-                                <TableCell
-                                  sx={{
-                                    padding: "4px",
-                                    border: "1px solid #ddd",
-                                    whiteSpace: "nowrap",
-                                  }}
-                                  key={index + labelId}
-                                  component="th"
-                                  id={labelId}
-                                  scope="row"
-                                  padding="normal"
-                                  align="left"
-                                >
-                                  {row[column]}
-                                </TableCell>
-                              </>
-                            );
+                          if (response?.Status === "Success") {
+                            const myObject = JSON.parse(response?.ResultData);
+                            console.log(myObject);
                           }
-                        })}
-                      </TableRow>
-                    );
-                  })}
-                </TableBody>
-              </Table>
-            </TableContainer>
-          )}
-          <TablePagination
-            rowsPerPageOptions={[10, 25, 50, 100]}
-            component="div"
-            count={data.length}
-            rowsPerPage={rowsPerPage}
-            page={page}
-            onPageChange={handleChangePage}
-            onRowsPerPageChange={handleChangeRowsPerPage}
-          />
-        </Paper>
+                          handleClose();
+                        };
+
+                        return (
+                          <TableRow
+                            hover
+                            className={`table-row `}
+                            onClick={(event) =>
+                              handleClick(event, row.iTransId)
+                            }
+                            onDoubleClick={(event) =>
+                              handleRowDoubleClick(event, index, row.iTransId)
+                            }
+                            role="checkbox"
+                            aria-checked={isItemSelected}
+                            tabIndex={-1}
+                            key={row.iTransId}
+                            selected={isItemSelected}
+                            sx={{ cursor: "pointer" }}
+                          >
+                            <TableCell padding="checkbox">
+                              <Checkbox
+                                color="primary"
+                                checked={isItemSelected}
+                                inputProps={{
+                                  "aria-labelledby": labelId,
+                                }}
+                              />
+                            </TableCell>
+                            {Object.keys(data[0]).map((column, index) => {
+                              if (
+                                column !== "iTransId" &&
+                                column !== "sNarration"
+                              ) {
+                                return (
+                                  <>
+                                    <TableCell
+                                      sx={{
+                                        padding: "4px",
+                                        border: "1px solid #ddd",
+                                        whiteSpace: "nowrap",
+                                      }}
+                                      key={index + labelId}
+                                      component="th"
+                                      id={labelId}
+                                      scope="row"
+                                      padding="normal"
+                                      align="left"
+                                    >
+                                      {row[column]}
+                                    </TableCell>
+                                  </>
+                                );
+                              }
+                            })}
+                          </TableRow>
+                        );
+                      })}
+                    </TableBody>
+                  </Table>
+                </TableContainer>
+              )}
+              <TablePagination
+                rowsPerPageOptions={[10, 25, 50, 100]}
+                component="div"
+                count={data.length}
+                rowsPerPage={rowsPerPage}
+                page={page}
+                onPageChange={handleChangePage}
+                onRowsPerPageChange={handleChangeRowsPerPage}
+              />
+            </Paper>
+          </>
+        ) : (
+          <DetailPage iUser={iUser} iTransId={selected[0]} iDocType={iDocType} action={handleEditClose}/>
+        )}
       </Box>
       <Loader open={open} handleClose={handleClose} />
     </Box>
