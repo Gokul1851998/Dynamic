@@ -15,6 +15,7 @@ import Header from "../CommonComponents/Header";
 import DetailGrid from "./DetailGrid";
 import { Box, Button, Stack } from "@mui/material";
 import {
+  getDocSettings,
   getTransactionDetails,
   getTransactionSummary,
 } from "../../api/ApiCall";
@@ -56,6 +57,17 @@ const FormContent = ({ header, receiveData }) => {
   const [stock, setStock] = useState(false);
   const [receipt, setReceipt] = useState(false);
 
+  useEffect(()=>{
+    const fetchData = async()=>{
+      const response = await getDocSettings({iDoctype : 2})
+      if(response?.Status === "Success"){
+        const myObject = JSON.parse(response.ResultData)
+        console.log(myObject);
+      }
+    } 
+    fetchData()
+  },[])
+
   useEffect(() => {
     if (header) {
       const formatDate = (dateString) => {
@@ -95,7 +107,7 @@ const FormContent = ({ header, receiveData }) => {
       setFormData([]);
     }
   }, [header]);
-  console.log(header);
+
   useEffect(() => {
     receiveData(formData);
   }, [formData]);
@@ -224,7 +236,7 @@ export default function DetailPage({ iUser, iDocType, iTransId, action }) {
         });
         if (response?.Status === "Success") {
           const myObject = JSON.parse(response.ResultData);
-
+          console.log(myObject,'---');
           setHeader(myObject.Header[0]);
         }
         handleClose();

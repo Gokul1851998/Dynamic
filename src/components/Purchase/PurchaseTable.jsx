@@ -29,7 +29,7 @@ import {
   getTransactionSummary,
 } from "../../api/ApiCall";
 import Loader from "../Loader/Loader";
-import { Button, ButtonGroup, TextField } from "@mui/material";
+import { Button, ButtonGroup, FormControl, InputLabel, MenuItem, Pagination, Select, TextField } from "@mui/material";
 import SendIcon from "@mui/icons-material/Send";
 import Stack from "@mui/material/Stack";
 import { useLocation } from "react-router-dom";
@@ -217,7 +217,7 @@ export default function PurchaseTable() {
     handleOpen();
     const response = await getTransactionSummary({
       DisplayLength: rowsPerPage,
-      DisplayStart: 0,
+      DisplayStart: page * rowsPerPage,
       SortCol: orderBy,
       SortDir: order,
       iUser,
@@ -226,6 +226,7 @@ export default function PurchaseTable() {
     });
     if (response?.Status === "Success") {
       const myObject = JSON.parse(response?.ResultData);
+      console.log(myObject);
       setData(myObject?.Table);
     }
     handleClose();
@@ -233,7 +234,7 @@ export default function PurchaseTable() {
 
   React.useEffect(() => {
     fetchData();
-  }, [searchQuery]);
+  }, [searchQuery,page, rowsPerPage, order, orderBy]);
 
   const handleRequestSort = (event, property) => {
     // console.log(property);
@@ -271,7 +272,8 @@ export default function PurchaseTable() {
   };
 
   const handleChangePage = (event, newPage) => {
-    setPage(newPage);
+    console.log(newPage);
+    setPage(newPage - 1);
   };
 
   const handleChangeRowsPerPage = (event) => {
@@ -463,16 +465,8 @@ export default function PurchaseTable() {
                           iId
                         ) => {
                           handleOpen();
-                          const response = await getTransactionDetails({
-                            iUser,
-                            iTransId: iId,
-                            iDocType: 2,
-                          });
-
-                          if (response?.Status === "Success") {
-                            const myObject = JSON.parse(response?.ResultData);
-                            console.log(myObject);
-                          }
+                          setNavigate(true);
+                          setSelected([iId])
                           handleClose();
                         };
 
@@ -535,15 +529,52 @@ export default function PurchaseTable() {
                   </Table>
                 </TableContainer>
               )}
-              <TablePagination
-                rowsPerPageOptions={[10, 25, 50, 100]}
-                component="div"
-                count={data.length}
-                rowsPerPage={rowsPerPage}
-                page={page}
-                onPageChange={handleChangePage}
-                onRowsPerPageChange={handleChangeRowsPerPage}
-              />
+              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: 2 }}>
+            <Pagination
+          count={Math.ceil(data.length / rowsPerPage)}
+          page={page + 1}
+          onChange={handleChangePage}
+          variant="outlined"
+          shape="rounded"
+          sx={{ padding: 2, display: 'flex', justifyContent: 'center' }}
+        />
+         <FormControl sx={{ m: 1 }} className="CLTFormControl">
+          <InputLabel
+            htmlFor="rows-per-page"
+            sx={{
+              "&.Mui-focused": {
+                color: "currentColor", // Keeps the current color
+              },
+            }}
+          >
+            Show Entries
+          </InputLabel>
+          <Select
+            value={rowsPerPage}
+            onChange={handleChangeRowsPerPage}
+            label="Rows per page"
+            inputProps={{
+              name: "rows-per-page",
+              id: "rows-per-page",
+            }}
+            sx={{
+              width: "120px",
+              height: "30px",
+              "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
+                borderColor: "currentColor", // Keeps the current border color
+              },
+              "&:hover .MuiOutlinedInput-notchedOutline": {
+                borderColor: "currentColor", // Optional: Keeps the border color on hover
+              },
+            }}
+          >
+            <MenuItem value={10}>10</MenuItem>
+            <MenuItem value={25}>25</MenuItem>
+            <MenuItem value={50}>50</MenuItem>
+            <MenuItem value={100}>100</MenuItem>
+          </Select>
+        </FormControl>
+        </Box>
             </Paper>
           </>
         ) : (
