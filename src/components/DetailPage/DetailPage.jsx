@@ -28,6 +28,7 @@ import CloseIcon from "@mui/icons-material/Close";
 import Loader from "../Loader/Loader";
 import SaveIcon from "@mui/icons-material/Save";
 import AutoCompleteCo from "../AutoComplete/AutoCompleteCo";
+import BodyTable from "./BodyTable";
 
 const buttonStyle = {
   textTransform: "none", // Set text transform to none for normal case
@@ -35,7 +36,7 @@ const buttonStyle = {
   backgroundColor: "#7581c6", // Set background color
 };
 
-const FormContent = ({ header, receiveData }) => {
+const FormContent = ({ header, receiveData, headerFeilds }) => {
   const formFields = [
     "Document No",
     "Date",
@@ -56,17 +57,6 @@ const FormContent = ({ header, receiveData }) => {
   const [suggestionVender, setSuggestionVender] = useState([]);
   const [stock, setStock] = useState(false);
   const [receipt, setReceipt] = useState(false);
-
-  useEffect(()=>{
-    const fetchData = async()=>{
-      const response = await getDocSettings({iDoctype : 2})
-      if(response?.Status === "Success"){
-        const myObject = JSON.parse(response.ResultData)
-        console.log(myObject);
-      }
-    } 
-    fetchData()
-  },[])
 
   useEffect(() => {
     if (header) {
@@ -211,9 +201,10 @@ export default function DetailPage({ iUser, iDocType, iTransId, action }) {
   const [activeTab, setActiveTab] = useState(0);
   const [header, setHeader] = useState();
   const [batch, setBatch] = useState();
-  const [body, setBody] = useState();
+  const [body, setBody] = useState([]);
   const [bification, setBification] = useState();
   const [open, setOpen] = React.useState(false);
+  const [headerFeilds, setHeaderFeilds] = useState([])
   const [childData, setChildData] = useState([]);
   const handleClose = () => {
     setOpen(false);
@@ -224,6 +215,17 @@ export default function DetailPage({ iUser, iDocType, iTransId, action }) {
   const handleTabClick = (index) => {
     setActiveTab(index);
   };
+
+  useEffect(()=>{
+    const fetchData = async()=>{
+      const response = await getDocSettings({iDoctype : 2})
+      if(response?.Status === "Success"){
+        const myObject = JSON.parse(response?.ResultData)
+        setHeaderFeilds(myObject?.Header);
+      }
+    } 
+    fetchData()
+  },[])
 
   useEffect(() => {
     const fetchData = async () => {
@@ -236,8 +238,9 @@ export default function DetailPage({ iUser, iDocType, iTransId, action }) {
         });
         if (response?.Status === "Success") {
           const myObject = JSON.parse(response.ResultData);
-          console.log(myObject,'---');
+          console.log(myObject);
           setHeader(myObject.Header[0]);
+          setBody(myObject?.Body)
         }
         handleClose();
       } else {
@@ -321,11 +324,11 @@ export default function DetailPage({ iUser, iDocType, iTransId, action }) {
         </MDBCardHeader>
         <MDBCardBody>
           {activeTab === 0 ? (
-            <FormContent header={header} receiveData={receiveDataFromChild} />
+            <FormContent header={header} receiveData={receiveDataFromChild} headerFeilds={headerFeilds} />
           ) : null}
         </MDBCardBody>
       </MDBCard>
-      <DetailGrid />
+      <BodyTable tableData={body} />
       <Loader open={open} handleClose={handleClose} />
     </>
   );

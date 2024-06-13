@@ -22,19 +22,28 @@ import AddIcon from "@mui/icons-material/Add";
 import PrintIcon from "@mui/icons-material/Print";
 import CloseIcon from "@mui/icons-material/Close";
 import { visuallyHidden } from "@mui/utils";
-import "./PurchaseTable.css";
 import {
   deleteTransaction,
   getTransactionDetails,
   getTransactionSummary,
 } from "../../api/ApiCall";
 import Loader from "../Loader/Loader";
-import { Button, ButtonGroup, FormControl, InputLabel, MenuItem, Pagination, Select, TextField } from "@mui/material";
+import {
+  Button,
+  ButtonGroup,
+  FormControl,
+  InputLabel,
+  MenuItem,
+  Pagination,
+  Select,
+  TextField,
+} from "@mui/material";
 import SendIcon from "@mui/icons-material/Send";
 import Stack from "@mui/material/Stack";
 import { useLocation } from "react-router-dom";
 import Swal from "sweetalert2";
 import DetailPage from "../DetailPage/DetailPage";
+import { MDBCard } from "mdb-react-ui-kit";
 
 function descendingComparator(a, b, orderBy) {
   if (b[orderBy] < a[orderBy]) {
@@ -184,7 +193,7 @@ EnhancedTableToolbar.propTypes = {
   numSelected: PropTypes.number.isRequired,
 };
 
-export default function PurchaseTable() {
+export default function BodyTable({tableData}) {
   const iUser = localStorage.getItem("userId");
   const location = useLocation();
   const iDocType = location.state;
@@ -215,26 +224,14 @@ export default function PurchaseTable() {
 
   const fetchData = async () => {
     handleOpen();
-    const response = await getTransactionSummary({
-      DisplayLength: rowsPerPage,
-      DisplayStart: page * rowsPerPage,
-      SortCol: orderBy,
-      SortDir: order,
-      iUser,
-      iDocType: iDocType,
-      Search: searchQuery,
-    });
-    if (response?.Status === "Success") {
-      const myObject = JSON.parse(response?.ResultData);
-      console.log(myObject);
-      setData(myObject?.Table);
-    }
+    console.log(tableData);
+    setData(tableData)
     handleClose();
   };
 
   React.useEffect(() => {
     fetchData();
-  }, [searchQuery,page, rowsPerPage, order, orderBy]);
+  }, [tableData]);
 
   const handleRequestSort = (event, property) => {
     // console.log(property);
@@ -344,245 +341,121 @@ export default function PurchaseTable() {
     setNavigate(true);
   };
 
-  const handleEditClose = () =>{
-    setSelected([])
-    setNavigate(false)
-  }
+  const handleEditClose = () => {
+    setSelected([]);
+    setNavigate(false);
+  };
 
   return (
-    <Box
-      sx={{
-        margin: 0,
-        background: "#8c99e0",
-        height: "200px",
-        boxShadow: "0px 5px 15px rgba(0, 0, 0, 0.5)",
-      }}
-    >
-      <Box
-        sx={{
-          width: "auto",
-          paddingLeft: 2,
-          paddingRight: 2,
-          zIndex: 1,
-        }}
-      >
-        {!navigate ? (
-          <>
-            <Stack
-              direction="row"
-              spacing={1}
-              padding={1}
-              justifyContent="flex-end"
-            >
-              <Button
-                onClick={handleNavigate}
-                variant="contained"
-                startIcon={<AddIcon />}
-                style={buttonStyle}
-              >
-                New
-              </Button>
-              <Button
-                onClick={handleNavigate}
-                variant="contained"
-                disabled={selected.length !== 1}
-                startIcon={<EditIcon />}
-                style={buttonStyle}
-              >
-                Edit
-              </Button>
-              <Button
-                onClick={handleDelete}
-                variant="contained"
-                disabled={selected.length <= 0}
-                startIcon={<DeleteIcon />}
-                style={buttonStyle}
-              >
-                Delete
-              </Button>
-              <Button
-                variant="contained"
-                startIcon={<PrintIcon />}
-                style={buttonStyle}
-              >
-                Print
-              </Button>
-              <Button
-                variant="contained"
-                startIcon={<CloseIcon />}
-                style={buttonStyle}
-              >
-                Close
-              </Button>
-            </Stack>
-
-            <Paper
-              sx={{
-                width: "100%",
-                mb: 2,
-                boxShadow: "0px 5px 15px rgba(0, 0, 0, 0.3)",
+    <>
+      <>
+      <MDBCard className="text-center mt-2" style={{ boxShadow: '0 4px 8px rgba(0, 0, 0, 0.3)' }}>
+          {/* <EnhancedTableToolbar
+            numSelected={selected.length}
+            values={searchQuery}
+            changes={handleSearch}
+          /> */}
+          {data.length > 0 && (
+            <TableContainer
+              style={{
+                display: "block",
+                maxHeight: "calc(100vh - 400px)",
+                overflowY: "auto",
+                scrollbarWidth: "thin",
+                borderRadius:2,
+                scrollbarColor: "#888 #f5f5f5",
+                scrollbarTrackColor: "#f5f5f5",
               }}
             >
-              <EnhancedTableToolbar
-                numSelected={selected.length}
-                values={searchQuery}
-                changes={handleSearch}
-              />
-              {data.length > 0 && (
-                <TableContainer
-                  style={{
-                    display: "block",
-                    maxHeight: "calc(100vh - 400px)",
-                    overflowY: "auto",
-                    scrollbarWidth: "thin",
-                    scrollbarColor: "#888 #f5f5f5",
-                    scrollbarTrackColor: "#f5f5f5",
-                  }}
-                >
-                  <Table
-                    sx={{ minWidth: 750 }}
-                    aria-labelledby="tableTitle"
-                    size={dense ? "small" : "medium"}
-                  >
-                    <EnhancedTableHead
-                      numSelected={Object.keys(selected).length}
-                      order={order}
-                      orderBy={orderBy}
-                      onSelectAllClick={handleSelectAllClick}
-                      onRequestSort={handleRequestSort}
-                      rowCount={data.length}
-                      rows={Object.keys(data[0])}
-                    />
+              <Table
+                sx={{ minWidth: 750 }}
+                aria-labelledby="tableTitle"
+                size={dense ? "small" : "medium"}
+              >
+                <EnhancedTableHead
+                  numSelected={Object.keys(selected).length}
+                  order={order}
+                  orderBy={orderBy}
+                  onSelectAllClick={handleSelectAllClick}
+                  onRequestSort={handleRequestSort}
+                  rowCount={data.length}
+                  rows={Object.keys(data[0])}
+                />
 
-                    <TableBody>
-                      {visibleRows.map((row, index) => {
-                        const isItemSelected = isSelected(row.iTransId);
-                        const labelId = `enhanced-table-checkbox-${index}`;
+                <TableBody>
+                  {visibleRows.map((row, index) => {
+                    const isItemSelected = isSelected(row.iTransId);
+                    const labelId = `enhanced-table-checkbox-${index}`;
 
-                        const handleRowDoubleClick = async (
-                          event,
-                          index,
-                          iId
-                        ) => {
-                          handleOpen();
-                          setNavigate(true);
-                          setSelected([iId])
-                          handleClose();
-                        };
+                    const handleRowDoubleClick = async (event, index, iId) => {
+                      handleOpen();
+                      setNavigate(true);
+                      setSelected([iId]);
+                      handleClose();
+                    };
 
-                        return (
-                          <TableRow
-                            hover
-                            className={`table-row `}
-                            onClick={(event) =>
-                              handleClick(event, row.iTransId)
-                            }
-                            onDoubleClick={(event) =>
-                              handleRowDoubleClick(event, index, row.iTransId)
-                            }
-                            role="checkbox"
-                            aria-checked={isItemSelected}
-                            tabIndex={-1}
-                            key={row.iTransId}
-                            selected={isItemSelected}
-                            sx={{ cursor: "pointer" }}
-                          >
-                            <TableCell padding="checkbox">
-                              <Checkbox
-                                color="primary"
-                                checked={isItemSelected}
-                                inputProps={{
-                                  "aria-labelledby": labelId,
-                                }}
-                              />
-                            </TableCell>
-                            {Object.keys(data[0]).map((column, index) => {
-                              if (
-                                column !== "iTransId" &&
-                                column !== "sNarration"
-                              ) {
-                                return (
-                                  <>
-                                    <TableCell
-                                      sx={{
-                                        padding: "4px",
-                                        border: "1px solid #ddd",
-                                        whiteSpace: "nowrap",
-                                      }}
-                                      key={index + labelId}
-                                      component="th"
-                                      id={labelId}
-                                      scope="row"
-                                      padding="normal"
-                                      align="left"
-                                    >
-                                      {row[column]}
-                                    </TableCell>
-                                  </>
-                                );
-                              }
-                            })}
-                          </TableRow>
-                        );
-                      })}
-                    </TableBody>
-                  </Table>
-                </TableContainer>
-              )}
-              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between'}}>
-              <FormControl sx={{ m: 1 }} className="CLTFormControl">
-          <InputLabel
-            htmlFor="rows-per-page"
-            sx={{
-              "&.Mui-focused": {
-                color: "currentColor", // Keeps the current color
-              },
-            }}
-          >
-            Show Entries
-          </InputLabel>
-          <Select
-            value={rowsPerPage}
-            onChange={handleChangeRowsPerPage}
-            label="Rows per page"
-            inputProps={{
-              name: "rows-per-page",
-              id: "rows-per-page",
-            }}
-            sx={{
-              width: "120px",
-              height: "30px",
-              "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
-                borderColor: "currentColor", // Keeps the current border color
-              },
-              "&:hover .MuiOutlinedInput-notchedOutline": {
-                borderColor: "currentColor", // Optional: Keeps the border color on hover
-              },
-            }}
-          >
-            <MenuItem value={10}>10</MenuItem>
-            <MenuItem value={25}>25</MenuItem>
-            <MenuItem value={50}>50</MenuItem>
-            <MenuItem value={100}>100</MenuItem>
-          </Select>
-        </FormControl>
-            <Pagination
-          count={Math.ceil(data.length / rowsPerPage)}
-          page={page + 1}
-          onChange={handleChangePage}
-          variant="outlined"
-          shape="rounded"
-          sx={{ padding: 2, display: 'flex', justifyContent: 'center' }}
-        />
-        
-        </Box>
-            </Paper>
-          </>
-        ) : (
-          <DetailPage iUser={iUser} iTransId={selected[0]} iDocType={iDocType} action={handleEditClose}/>
-        )}
-      </Box>
+                    return (
+                      <TableRow
+                        hover
+                        className={`table-row `}
+                        onClick={(event) => handleClick(event, row.iTransId)}
+                        onDoubleClick={(event) =>
+                          handleRowDoubleClick(event, index, row.iTransId)
+                        }
+                        role="checkbox"
+                        aria-checked={isItemSelected}
+                        tabIndex={-1}
+                        key={row.iTransId}
+                        selected={isItemSelected}
+                        sx={{ cursor: "pointer" }}
+                      >
+                        <TableCell padding="checkbox">
+                          <Checkbox
+                            color="primary"
+                            checked={isItemSelected}
+                            inputProps={{
+                              "aria-labelledby": labelId,
+                            }}
+                          />
+                        </TableCell>
+                        {Object.keys(data[0]).map((column, index) => {
+                          if (
+                            column !== "iTransId" &&
+                            column !== "sNarration"
+                          ) {
+                            return (
+                              <>
+                                <TableCell
+                                  sx={{
+                                    padding: "4px",
+                                    border: "1px solid #ddd",
+                                    whiteSpace: "nowrap",
+                                  }}
+                                  key={index + labelId}
+                                  component="th"
+                                  id={labelId}
+                                  scope="row"
+                                  padding="normal"
+                                  align="left"
+                                >
+                                  {row[column]}
+                                </TableCell>
+                              </>
+                            );
+                          }
+                        })}
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
+            </TableContainer>
+          )}
+         
+          </MDBCard>
+      </>
+
       <Loader open={open} handleClose={handleClose} />
-    </Box>
+    </>
   );
 }
