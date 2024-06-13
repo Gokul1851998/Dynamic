@@ -24,6 +24,7 @@ import CloseIcon from "@mui/icons-material/Close";
 import { visuallyHidden } from "@mui/utils";
 import {
   deleteTransaction,
+  getMasters,
   getTransactionDetails,
   getTransactionSummary,
 } from "../../api/ApiCall";
@@ -44,6 +45,7 @@ import { useLocation } from "react-router-dom";
 import Swal from "sweetalert2";
 import DetailPage from "../DetailPage/DetailPage";
 import { MDBCard } from "mdb-react-ui-kit";
+import AutoComplete1 from "../AutoComplete/AutoComplete1";
 
 function descendingComparator(a, b, orderBy) {
   if (b[orderBy] < a[orderBy]) {
@@ -115,31 +117,17 @@ function EnhancedTableHead(props) {
           />
         </TableCell>
         {rows.map((header, index) => {
-          if (header !== "iTransId" && header !== "sNarration") {
+          if (header !== "iTransDtId") {
             // Exclude "iId", "iAssetType", and "sAltName" from the header
             return (
               <TableCell
-                sx={{ border: "1px solid #ddd" }}
+                sx={{ border: "1px solid #ddd", color: "#FFFF" }}
                 key={index}
                 align="left" // Set the alignment to left
                 padding="normal"
                 sortDirection={orderBy === header ? order : false}
               >
-                <TableSortLabel
-                  sx={{ color: "#fff" }}
-                  active={orderBy === header}
-                  direction={orderBy === header ? order : "asc"}
-                  onClick={createSortHandler(header)}
-                >
-                  {header}
-                  {orderBy === header ? (
-                    <Box component="span" sx={visuallyHidden}>
-                      {order === "desc"
-                        ? "sorted descending"
-                        : "sorted ascending"}
-                    </Box>
-                  ) : null}
-                </TableSortLabel>
+                {header}
               </TableCell>
             );
           }
@@ -193,7 +181,7 @@ EnhancedTableToolbar.propTypes = {
   numSelected: PropTypes.number.isRequired,
 };
 
-export default function BodyTable({tableData}) {
+export default function BodyTable({ tableData }) {
   const iUser = localStorage.getItem("userId");
   const location = useLocation();
   const iDocType = location.state;
@@ -224,8 +212,32 @@ export default function BodyTable({tableData}) {
 
   const fetchData = async () => {
     handleOpen();
-    console.log(tableData);
-    setData(tableData)
+
+    const dataArrage = tableData.map((data) => ({
+      iTransDtId: data?.iTransDtId,
+      Employee: data?.sTag4,
+      EmployeeId: data?.iTag4,
+      Project: data?.sTag3,
+      Company: data?.sTag2,
+      Warehouse: data?.sTag1,
+      Item: data?.iProduct,
+      Description: data?.sItemDesc,
+      Unit: data?.iUnit,
+      Account: data?.iAccount,
+      Quatity: data?.fQty,
+      Rate: data?.fRate,
+      Gross: data?.fGross,
+      Batch: data?.sBatchNo,
+      "Serial No": data?.sSerialNo,
+      "Add Charge": null,
+      "Disc%": "",
+      "Total Dis": "",
+      Net: "",
+      Stock: data?.nStockValue,
+      Remark: data?.sRemarks,
+    }));
+    setData(dataArrage);
+
     handleClose();
   };
 
@@ -234,7 +246,6 @@ export default function BodyTable({tableData}) {
   }, [tableData]);
 
   const handleRequestSort = (event, property) => {
-    // console.log(property);
     // const isAsc = orderBy === property && order === "asc";
     setOrder(orderBy ? "desc" : "asc");
     setOrderBy(property);
@@ -242,7 +253,7 @@ export default function BodyTable({tableData}) {
 
   const handleSelectAllClick = (event) => {
     if (event.target.checked) {
-      const newSelected = data.map((n) => n.iTransId);
+      const newSelected = data.map((n) => n.iTransDtId);
       setSelected(newSelected);
       return;
     }
@@ -269,7 +280,6 @@ export default function BodyTable({tableData}) {
   };
 
   const handleChangePage = (event, newPage) => {
-    console.log(newPage);
     setPage(newPage - 1);
   };
 
@@ -345,11 +355,13 @@ export default function BodyTable({tableData}) {
     setSelected([]);
     setNavigate(false);
   };
-
   return (
     <>
       <>
-      <MDBCard className="text-center mt-2" style={{ boxShadow: '0 4px 8px rgba(0, 0, 0, 0.3)' }}>
+        <MDBCard
+          className="text-center mt-2"
+          style={{ boxShadow: "0 4px 8px rgba(0, 0, 0, 0.3)" }}
+        >
           {/* <EnhancedTableToolbar
             numSelected={selected.length}
             values={searchQuery}
@@ -362,7 +374,7 @@ export default function BodyTable({tableData}) {
                 maxHeight: "calc(100vh - 400px)",
                 overflowY: "auto",
                 scrollbarWidth: "thin",
-                borderRadius:2,
+                borderRadius: 2,
                 scrollbarColor: "#888 #f5f5f5",
                 scrollbarTrackColor: "#f5f5f5",
               }}
@@ -383,9 +395,9 @@ export default function BodyTable({tableData}) {
                 />
 
                 <TableBody>
-                  {visibleRows.map((row, index) => {
-                    const isItemSelected = isSelected(row.iTransId);
-                    const labelId = `enhanced-table-checkbox-${index}`;
+                  {visibleRows.map((row, indexNum) => {
+                    const isItemSelected = isSelected(row.iTransDtId);
+                    const labelId = `enhanced-table-checkbox-${indexNum}`;
 
                     const handleRowDoubleClick = async (event, index, iId) => {
                       handleOpen();
@@ -398,14 +410,14 @@ export default function BodyTable({tableData}) {
                       <TableRow
                         hover
                         className={`table-row `}
-                        onClick={(event) => handleClick(event, row.iTransId)}
+                        onClick={(event) => handleClick(event, row.iTransDtId)}
                         onDoubleClick={(event) =>
-                          handleRowDoubleClick(event, index, row.iTransId)
+                          handleRowDoubleClick(event, indexNum, row.iTransDtId)
                         }
                         role="checkbox"
                         aria-checked={isItemSelected}
                         tabIndex={-1}
-                        key={row.iTransId}
+                        key={row.iTransDtId}
                         selected={isItemSelected}
                         sx={{ cursor: "pointer" }}
                       >
@@ -419,10 +431,7 @@ export default function BodyTable({tableData}) {
                           />
                         </TableCell>
                         {Object.keys(data[0]).map((column, index) => {
-                          if (
-                            column !== "iTransId" &&
-                            column !== "sNarration"
-                          ) {
+                          if (column !== "iTransDtId") {
                             return (
                               <>
                                 <TableCell
@@ -438,7 +447,17 @@ export default function BodyTable({tableData}) {
                                   padding="normal"
                                   align="left"
                                 >
-                                  {row[column]}
+                                  {row[column] === "Employee"
+                                    ? // <AutoComplete1
+                                      //   formData={data}
+                                      //   setFormData={setData}
+                                      //   column={column}
+                                      //   row={indexNum}
+                                      //   api={getMasters}
+                                      //   iTag={4}
+                                      // />
+                                      null
+                                    : row[column]}
                                 </TableCell>
                               </>
                             );
@@ -451,8 +470,7 @@ export default function BodyTable({tableData}) {
               </Table>
             </TableContainer>
           )}
-         
-          </MDBCard>
+        </MDBCard>
       </>
 
       <Loader open={open} handleClose={handleClose} />

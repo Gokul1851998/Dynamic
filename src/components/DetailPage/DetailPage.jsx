@@ -57,7 +57,7 @@ const FormContent = ({ header, receiveData, headerFeilds }) => {
   const [suggestionVender, setSuggestionVender] = useState([]);
   const [stock, setStock] = useState(false);
   const [receipt, setReceipt] = useState(false);
-
+  
   useEffect(() => {
     if (header) {
       const formatDate = (dateString) => {
@@ -129,7 +129,6 @@ const FormContent = ({ header, receiveData, headerFeilds }) => {
                   label={label}
                   type="date"
                   size="small"
-               
                   value={formData[label] || ""}
                   onChange={(e) => handleInputChange(e, label)}
                 />
@@ -138,7 +137,6 @@ const FormContent = ({ header, receiveData, headerFeilds }) => {
                 label === "Currency" ||
                 label === "PaymentTerms" ? (
                 <AutoCompleteCo
-               
                   iTag={
                     label === "Vendor"
                       ? 1
@@ -160,7 +158,6 @@ const FormContent = ({ header, receiveData, headerFeilds }) => {
                   id={`form3Example${index + 1}`}
                   label={label}
                   type="text"
-               
                   value={formData[label] || ""}
                   onChange={(e) => handleInputChange(e, label)}
                 />
@@ -168,8 +165,8 @@ const FormContent = ({ header, receiveData, headerFeilds }) => {
             </div>
           </MDBCol>
         ))}
-        <MDBCol  lg="2" md="3" sm="" xs="12">
-          <div >
+        <MDBCol lg="2" md="3" sm="" xs="12">
+          <div>
             <MDBCheckbox
               checked={stock}
               onChange={handleStockChange}
@@ -180,8 +177,8 @@ const FormContent = ({ header, receiveData, headerFeilds }) => {
             />
           </div>
         </MDBCol>
-        <MDBCol  lg="2" md="3" sm="6" xs="12">
-          <div >
+        <MDBCol lg="2" md="3" sm="6" xs="12">
+          <div>
             <MDBCheckbox
               checked={receipt}
               onChange={handleReceiptChange}
@@ -204,7 +201,7 @@ export default function DetailPage({ iUser, iDocType, iTransId, action }) {
   const [body, setBody] = useState([]);
   const [bification, setBification] = useState();
   const [open, setOpen] = React.useState(false);
-  const [headerFeilds, setHeaderFeilds] = useState([])
+  const [headerFeilds, setHeaderFeilds] = useState([]);
   const [childData, setChildData] = useState([]);
   const handleClose = () => {
     setOpen(false);
@@ -216,16 +213,16 @@ export default function DetailPage({ iUser, iDocType, iTransId, action }) {
     setActiveTab(index);
   };
 
-  useEffect(()=>{
-    const fetchData = async()=>{
-      const response = await getDocSettings({iDoctype : 2})
-      if(response?.Status === "Success"){
-        const myObject = JSON.parse(response?.ResultData)
+  useEffect(() => {
+    const fetchData = async () => {
+      const response = await getDocSettings({ iDoctype: 2 });
+      if (response?.Status === "Success") {
+        const myObject = JSON.parse(response?.ResultData);
         setHeaderFeilds(myObject?.Header);
       }
-    } 
-    fetchData()
-  },[])
+    };
+    fetchData();
+  }, []);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -240,7 +237,7 @@ export default function DetailPage({ iUser, iDocType, iTransId, action }) {
           const myObject = JSON.parse(response.ResultData);
           console.log(myObject);
           setHeader(myObject.Header[0]);
-          setBody(myObject?.Body)
+          setBody(myObject?.Body);
         }
         handleClose();
       } else {
@@ -324,7 +321,11 @@ export default function DetailPage({ iUser, iDocType, iTransId, action }) {
         </MDBCardHeader>
         <MDBCardBody>
           {activeTab === 0 ? (
-            <FormContent header={header} receiveData={receiveDataFromChild} headerFeilds={headerFeilds} />
+            <FormContent
+              header={header}
+              receiveData={receiveDataFromChild}
+              headerFeilds={headerFeilds}
+            />
           ) : null}
         </MDBCardBody>
       </MDBCard>
