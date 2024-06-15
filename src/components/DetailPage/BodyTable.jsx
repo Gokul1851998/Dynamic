@@ -25,6 +25,7 @@ import { visuallyHidden } from "@mui/utils";
 import {
   deleteTransaction,
   getMasters,
+  getProductDetails,
   getTransactionDetails,
   getTransactionSummary,
 } from "../../api/ApiCall";
@@ -46,6 +47,7 @@ import Swal from "sweetalert2";
 import DetailPage from "../DetailPage/DetailPage";
 import { MDBCard } from "mdb-react-ui-kit";
 import AutoComplete1 from "../AutoComplete/AutoComplete1";
+import TableInput from "../Input/TableInput";
 
 function descendingComparator(a, b, orderBy) {
   if (b[orderBy] < a[orderBy]) {
@@ -117,7 +119,11 @@ function EnhancedTableHead(props) {
           />
         </TableCell>
         {rows.map((header, index) => {
-          if (header !== "iTransDtId") {
+          if (
+            header !== "iTransDtId" &&
+            header !== "EmployeeId" &&
+            header !== "ProjectId"
+          ) {
             // Exclude "iId", "iAssetType", and "sAltName" from the header
             return (
               <TableCell
@@ -127,7 +133,7 @@ function EnhancedTableHead(props) {
                 padding="normal"
                 sortDirection={orderBy === header ? order : false}
               >
-                {header}
+                {`${header}`}
               </TableCell>
             );
           }
@@ -218,12 +224,13 @@ export default function BodyTable({ tableData }) {
       Employee: data?.sTag4,
       EmployeeId: data?.iTag4,
       Project: data?.sTag3,
+      ProjectId: data?.iTag3,
       Company: data?.sTag2,
       Warehouse: data?.sTag1,
       Item: data?.iProduct,
       Description: data?.sItemDesc,
-      Unit: data?.iUnit,
       Account: data?.iAccount,
+      Unit: data?.iUnit,
       Quatity: data?.fQty,
       Rate: data?.fRate,
       Gross: data?.fGross,
@@ -431,12 +438,16 @@ export default function BodyTable({ tableData }) {
                           />
                         </TableCell>
                         {Object.keys(data[0]).map((column, index) => {
-                          if (column !== "iTransDtId") {
+                          if (
+                            column !== "iTransDtId" &&
+                            column !== "EmployeeId" &&
+                            column !== "ProjectId"
+                          ) {
                             return (
                               <>
                                 <TableCell
                                   sx={{
-                                    padding: "4px",
+                                    padding: 0,
                                     border: "1px solid #ddd",
                                     whiteSpace: "nowrap",
                                   }}
@@ -444,20 +455,80 @@ export default function BodyTable({ tableData }) {
                                   component="th"
                                   id={labelId}
                                   scope="row"
-                                  padding="normal"
+                                  padding="0px"
                                   align="left"
                                 >
-                                  {row[column] === "Employee"
-                                    ? // <AutoComplete1
-                                      //   formData={data}
-                                      //   setFormData={setData}
-                                      //   column={column}
-                                      //   row={indexNum}
-                                      //   api={getMasters}
-                                      //   iTag={4}
-                                      // />
-                                      null
-                                    : row[column]}
+                                  {column === "Employee" ? (
+                                    <AutoComplete1
+                                      formData={data}
+                                      setFormData={setData}
+                                      column={column}
+                                      row={indexNum}
+                                      api={getMasters}
+                                      iTag={6}
+                                    />
+                                  ) : column === "Project" ? (
+                                    <AutoComplete1
+                                      formData={data}
+                                      setFormData={setData}
+                                      column={column}
+                                      row={indexNum}
+                                      api={getMasters}
+                                      iTag={5}
+                                    />
+                                  ) : column === "Company" ? (
+                                    <AutoComplete1
+                                      formData={data}
+                                      setFormData={setData}
+                                      column={column}
+                                      row={indexNum}
+                                      api={getMasters}
+                                      iTag={4}
+                                    />
+                                  ) : column === "Warehouse" ? (
+                                    <AutoComplete1
+                                      formData={data}
+                                      setFormData={setData}
+                                      column={column}
+                                      row={indexNum}
+                                      api={getMasters}
+                                      iTag={1}
+                                    />
+                                  ) : column === "Item" ? (
+                                    <AutoComplete1
+                                      formData={data}
+                                      setFormData={setData}
+                                      column={column}
+                                      row={indexNum}
+                                      api={getMasters}
+                                      iTag={2}
+                                    />
+                                  ) : column === "Description" ? (
+                                    <TableInput
+                                      type="text"
+                                      value={data}
+                                      setValue={setData}
+                                      column={column}
+                                      row={indexNum}
+                                    />
+                                  ): column === "Account" ? (
+                                    <AutoComplete1
+                                      formData={data}
+                                      setFormData={setData}
+                                      column={column}
+                                      row={indexNum}
+                                      api={getMasters}
+                                      iTag={1}
+                                    />
+                                  )  : (
+                                    <TableInput
+                                      type="text"
+                                      value={data}
+                                      setValue={setData}
+                                      column={column}
+                                      row={indexNum}
+                                    />
+                                  )}
                                 </TableCell>
                               </>
                             );

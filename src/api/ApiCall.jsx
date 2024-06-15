@@ -77,3 +77,15 @@ export const getLogin = async (payload) => {
       console.log('GetMasters',error);
     }
   };
+
+  export const getProductDetails = async (payload) => {
+    try {
+      const response = await axios.get(`${baseUrl}GetProductDetails`, {
+        params: payload,
+      });
+      return response?.data;
+    } catch (error) {
+      console.log('GetProductDetails',error);
+    }
+  };
+
