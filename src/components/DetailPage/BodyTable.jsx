@@ -21,6 +21,7 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import AddIcon from "@mui/icons-material/Add";
 import PrintIcon from "@mui/icons-material/Print";
 import CloseIcon from "@mui/icons-material/Close";
+import PopupState, { bindTrigger, bindPopover } from "material-ui-popup-state";
 import { visuallyHidden } from "@mui/utils";
 import {
   deleteTransaction,
@@ -30,6 +31,9 @@ import {
   getTransactionSummary,
 } from "../../api/ApiCall";
 import Loader from "../Loader/Loader";
+import AddCircleIcon from "@mui/icons-material/AddCircle";
+import RemoveCircleIcon from "@mui/icons-material/RemoveCircle";
+import MoreVertIcon from "@mui/icons-material/MoreVert";
 import {
   Button,
   ButtonGroup,
@@ -37,6 +41,7 @@ import {
   InputLabel,
   MenuItem,
   Pagination,
+  Popover,
   Select,
   TextField,
 } from "@mui/material";
@@ -48,6 +53,7 @@ import DetailPage from "../DetailPage/DetailPage";
 import { MDBCard } from "mdb-react-ui-kit";
 import AutoComplete1 from "../AutoComplete/AutoComplete1";
 import TableInput from "../Input/TableInput";
+import BatchModal from "./BatchModal";
 
 function descendingComparator(a, b, orderBy) {
   if (b[orderBy] < a[orderBy]) {
@@ -109,14 +115,7 @@ function EnhancedTableHead(props) {
           }}
           padding="checkbox"
         >
-          <Checkbox
-            color="primary"
-            checked={rowCount > 0 && numSelected === rowCount}
-            onChange={onSelectAllClick}
-            inputProps={{
-              "aria-label": "select all desserts",
-            }}
-          />
+       
         </TableCell>
         {rows.map((header, index) => {
           if (
@@ -202,12 +201,25 @@ export default function BodyTable({ tableData }) {
   const [sortDir, setSortDir] = React.useState("asc");
   const [open, setOpen] = React.useState(false);
   const [navigate, setNavigate] = React.useState(false);
+  const [batchModal, setBatchModal] = React.useState(false)
+  const [qty, setQty] = React.useState(0)
+  const tableContainerRef = React.useRef(null);
 
   const buttonStyle = {
     textTransform: "none", // Set text transform to none for normal case
     color: "#FFFFFF", // Set text color
     backgroundColor: "#7581c6", // Set background color
   };
+
+  const handleBatchOpen =(value)=>{
+    console.log(value);
+    setBatchModal(true)
+    setQty(value)
+  }
+
+  const handleBatchClose =()=>{
+    setBatchModal(false)
+  }
 
   const handleClose = () => {
     setOpen(false);
@@ -218,7 +230,9 @@ export default function BodyTable({ tableData }) {
 
   const fetchData = async () => {
     handleOpen();
-
+ if (tableContainerRef.current) {
+      tableContainerRef.current.scrollLeft = 0;
+    }
     const dataArrage = tableData.map((data) => ({
       iTransDtId: data?.iTransDtId,
       Employee: data?.sTag4,
@@ -231,7 +245,7 @@ export default function BodyTable({ tableData }) {
       Description: data?.sItemDesc,
       Account: data?.iAccount,
       Unit: data?.iUnit,
-      Quatity: data?.fQty,
+      Quantity: data?.fQty,
       Rate: data?.fRate,
       Gross: data?.fGross,
       Batch: data?.sBatchNo,
@@ -241,7 +255,7 @@ export default function BodyTable({ tableData }) {
       "Total Dis": "",
       Net: "",
       Stock: data?.nStockValue,
-      Remark: data?.sRemarks,
+      Remark: data?.sRemarks || " ",
     }));
     setData(dataArrage);
 
@@ -362,6 +376,41 @@ export default function BodyTable({ tableData }) {
     setSelected([]);
     setNavigate(false);
   };
+
+  const handleRow = (type) => {
+    if (type === 1) {
+      setData([
+        ...data,
+        {
+          iTransDtId: "",
+          Employee: "",
+          EmployeeId: 0,
+          Project: "",
+          ProjectId: 0,
+          Company: "",
+          Warehouse: "",
+          Item: "",
+          Description: "",
+          Account: "",
+          Unit: "",
+          Quantity: "",
+          Rate: "",
+          Gross: "",
+          Batch: "",
+          "Serial No": "",
+          "Add Charge": null,
+          "Disc%": "",
+          "Total Dis": "",
+          Net: "",
+          Stock: "",
+          Remark: "",
+        },
+      ]);
+    } else {
+      setSelected([]);
+      setData(data.slice(0, -1));
+    }
+  };
   return (
     <>
       <>
@@ -376,6 +425,7 @@ export default function BodyTable({ tableData }) {
           /> */}
           {data.length > 0 && (
             <TableContainer
+            ref={tableContainerRef}
               style={{
                 display: "block",
                 maxHeight: "calc(100vh - 400px)",
@@ -387,6 +437,7 @@ export default function BodyTable({ tableData }) {
               }}
             >
               <Table
+              
                 sx={{ minWidth: 750 }}
                 aria-labelledby="tableTitle"
                 size={dense ? "small" : "medium"}
@@ -417,10 +468,7 @@ export default function BodyTable({ tableData }) {
                       <TableRow
                         hover
                         className={`table-row `}
-                        onClick={(event) => handleClick(event, row.iTransDtId)}
-                        onDoubleClick={(event) =>
-                          handleRowDoubleClick(event, indexNum, row.iTransDtId)
-                        }
+                        
                         role="checkbox"
                         aria-checked={isItemSelected}
                         tabIndex={-1}
@@ -429,13 +477,69 @@ export default function BodyTable({ tableData }) {
                         sx={{ cursor: "pointer" }}
                       >
                         <TableCell padding="checkbox">
-                          <Checkbox
-                            color="primary"
-                            checked={isItemSelected}
-                            inputProps={{
-                              "aria-labelledby": labelId,
-                            }}
-                          />
+                        <PopupState
+                              variant="popover"
+                              popupId="demo-popup-popover"
+                            >
+                              {(popupState) => (
+                                <div>
+                                  <IconButton
+                                    aria-label="options"
+                                    {...bindTrigger(popupState)}
+                                    sx={{ padding: 0, fontSize: "1.2rem" }}
+                                  >
+                                    <MoreVertIcon sx={{ fontSize: "1.2rem" }} />
+                                  </IconButton>
+                                  <Popover
+                                    {...bindPopover(popupState)}
+                                    anchorOrigin={{
+                                      vertical: "bottom",
+                                      horizontal: "center",
+                                    }}
+                                    transformOrigin={{
+                                      vertical: "top",
+                                      horizontal: "center",
+                                    }}
+                                  >
+                                    <Stack direction="row">
+                                      <IconButton
+                                        onClick={() => {
+                                          handleRow(1);
+                                          popupState.close(); // Close the popover
+                                        }}
+                                        aria-label="add"
+                                        color="#8c99e0"
+                                        sx={{
+                                          fontSize: "1.2rem",
+                                          color: "#8c99e0",
+                                        }}
+                                      >
+                                        <AddCircleIcon
+                                          sx={{ fontSize: "1.2rem" }}
+                                        />
+                                      </IconButton>
+                                      {data?.length > 1 ? (
+                                        <IconButton
+                                          onClick={() => {
+                                            handleRow(0);
+                                            popupState.close(); // Close the popover
+                                          }}
+                                          aria-label="remove"
+                                          sx={{
+                                            fontSize: "1.2rem",
+                                            color: "#8c99e0",
+                                          }}
+                                        >
+                                          <RemoveCircleIcon
+                                            sx={{ fontSize: "1.2rem" }}
+                                          />
+                                        </IconButton>
+                                      ) : null}
+                                    </Stack>
+                                  </Popover>
+                                </div>
+                              )}
+                            </PopupState>
                         </TableCell>
                         {Object.keys(data[0]).map((column, index) => {
                           if (
@@ -451,6 +555,7 @@ export default function BodyTable({ tableData }) {
                                     border: "1px solid #ddd",
                                     whiteSpace: "nowrap",
                                   }}
+                                  
                                   key={index + labelId}
                                   component="th"
                                   id={labelId}
@@ -520,7 +625,36 @@ export default function BodyTable({ tableData }) {
                                       api={getMasters}
                                       iTag={1}
                                     />
-                                  )  : (
+                                  ): column === "Quantity" ? (
+                                    <TableInput
+                                      type="number"
+                                      value={data}
+                                      setValue={setData}
+                                      column={column}
+                                      row={indexNum}
+                                    />
+                                  ): column === "Rate" ? (
+                                    <TableInput
+                                      type="number"
+                                      value={data}
+                                      setValue={setData}
+                                      column={column}
+                                      row={indexNum}
+                                    />
+                                  ): column === "Batch" ? (
+                                    <div onClick={()=>handleBatchOpen(row.Quantity
+                                    )}>
+                                    <TableInput
+                            
+                                      type="number"
+                                      value={data}
+                                      setValue={setData}
+                                      column={column}
+                                      row={indexNum}
+                                    />
+                             
+                                    </div>
+                                  )   : (
                                     <TableInput
                                       type="text"
                                       value={data}
@@ -543,7 +677,7 @@ export default function BodyTable({ tableData }) {
           )}
         </MDBCard>
       </>
-
+      <BatchModal isOpen={batchModal} handleCloseModal={handleBatchClose}  />
       <Loader open={open} handleClose={handleClose} />
     </>
   );

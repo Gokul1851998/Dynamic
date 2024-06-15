@@ -87,7 +87,7 @@ const AutoComplete1 = ({ formData, setFormData, column, row, api, iTag }) => {
 
               borderColor: "transparent",
               borderStyle: "solid",
-
+              
               fontSize: "12px",
               height: "36px",
               padding: "0px",
@@ -129,10 +129,10 @@ const AutoComplete1 = ({ formData, setFormData, column, row, api, iTag }) => {
         
             "& .MuiOutlinedInput-input": {
               padding: "8px 14px", // Reduce padding to decrease height
-              transform: "translate(10px, 0px) scale(1)",
+          
+   
             },
             "& .MuiInputBase-input": {
-              // zIndex:1,
               fontSize: "0.75rem", // Adjust the font size of the input text
             },
             "& .MuiInputLabel-outlined": {
