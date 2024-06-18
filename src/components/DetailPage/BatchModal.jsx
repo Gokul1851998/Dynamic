@@ -6,12 +6,28 @@ import SaveIcon from "@mui/icons-material/Save";
 import DeleteIcon from "@mui/icons-material/Delete";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import AddAPhotoIcon from "@mui/icons-material/AddAPhoto";
+import { DemoContainer } from "@mui/x-date-pickers/internals/demo";
+import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
+import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
+import { DateTimePicker } from "@mui/x-date-pickers/DateTimePicker";
+import AddCircleIcon from "@mui/icons-material/AddCircle";
+import RemoveCircleIcon from "@mui/icons-material/RemoveCircle";
+import PopupState, { bindTrigger, bindPopover } from "material-ui-popup-state";
+import MoreVertIcon from "@mui/icons-material/MoreVert";
 import {
   Autocomplete,
   Box,
   Button,
+  CardContent,
   IconButton,
+  Popover,
   Stack,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
   TextField,
   Tooltip,
   Typography,
@@ -23,15 +39,18 @@ import { MDBRow, MDBCol, MDBInput, MDBBtn } from "mdb-react-ui-kit";
 import { styled } from "@mui/material/styles";
 import Loader from "../Loader/Loader";
 import ErrorMessage from "../ErrorMessage/ErrorMessage";
+import TableInput from "../Input/TableInput";
+import TableModalInput from "../Input/TableModalInput";
 
 const Alert = React.forwardRef(function Alert(props, ref) {
   return <MuiAlert elevation={6} ref={ref} variant="filled" {...props} />;
 });
 
-export default function BatchModal({ isOpen, handleCloseModal }) {
+export default function BatchModal({ isOpen, handleCloseModal, qty }) {
   const [open, setOpen] = React.useState(false);
   const [warning, setWarning] = useState(false);
   const [message, setMessage] = useState("");
+  const [data, setData] = useState([]);
 
   const handleCloseAlert = (event, reason) => {
     if (reason === "clickaway") {
@@ -39,6 +58,10 @@ export default function BatchModal({ isOpen, handleCloseModal }) {
     }
     setWarning(false);
   };
+
+  useEffect(() => {
+    setData([{ iId: 1, Batch: "", "Exp.Date": "", "Tot.Qty": "" }]);
+  }, []);
 
   const handleOpenAlert = () => {
     setWarning(true);
@@ -117,8 +140,8 @@ export default function BatchModal({ isOpen, handleCloseModal }) {
                 <Box
                   sx={{
                     width: "auto",
-                    marginTop: 1,
-                    padding: 3,
+                    paddingLeft: 2,
+
                     zIndex: 1,
                     backgroundColor: "#ffff",
                     borderRadius: 2,
@@ -127,8 +150,9 @@ export default function BatchModal({ isOpen, handleCloseModal }) {
                   <TextField
                     margin="normal"
                     size="small"
-                    disabled
+                    aria-readonly
                     type="number"
+                    value={qty}
                     label="Quantity"
                     autoComplete="off"
                     autoFocus
@@ -148,29 +172,202 @@ export default function BatchModal({ isOpen, handleCloseModal }) {
                       "& .MuiInputBase-input": {
                         fontSize: "0.75rem", // Adjust the font size of the input text
                       },
-                      "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
-                        borderColor: "currentColor", // Keeps the current border color
-                      },
-                      "&:hover .MuiOutlinedInput-notchedOutline": {
-                        borderColor: "currentColor", // Optional: Keeps the border color on hover
-                      },
                     }}
                   />
-                  <MDBRow className="mb-4">
-                    <MDBCol>
-                      <MDBInput
-                        required
-                        id="form6Example3"
-                        maxLength={500}
-                        label="Action Required *"
-                        labelStyle={{
-                          fontSize: "15px",
-                        }}
-                        autoComplete="off"
-                      />
-                    </MDBCol>
-                  </MDBRow>
                 </Box>
+                <CardContent>
+                  <TableContainer
+                    style={{
+                      display: "block",
+                      maxHeight: "calc(100vh - 200px)",
+                      overflowY: "auto",
+                      scrollbarWidth: "thin",
+                      scrollbarColor: "#888 #f5f5f5",
+                      scrollbarTrackColor: "#f5f5f5",
+                      boxShadow: "0px 5px 15px rgba(0, 0, 0, 0.1)",
+                    }}
+                  >
+                    {data && data.length ? (
+                      <Table
+                        sx={{ minWidth: 750 }}
+                        aria-labelledby="tableTitle"
+                        size={"small"}
+                      >
+                        <TableHead
+                          style={{
+                            background: `#8c99e0`,
+                            position: "sticky",
+                            top: 0,
+                            zIndex: "1",
+                          }}
+                        >
+                          <TableRow>
+                            <TableCell
+                              className="text-white"
+                              sx={{
+                                padding: "4px",
+                                border: "1px solid #ddd",
+                                whiteSpace: "nowrap",
+                                cursor: "pointer",
+                                minWidth: "80px",
+                              }}
+                              padding="checkbox"
+                            ></TableCell>
+                            {Object.keys(data[0])
+                              .filter((header) => header !== "iId")
+                              .map((header, index) => (
+                                <TableCell
+                                  sx={{
+                                    border: "1px solid #ddd",
+                                    cursor: "pointer",
+                                    padding: "4px",
+                                    color: "white",
+                                  }}
+                                  key={`${index}-${header}`}
+                                  align="left"
+                                  padding="normal"
+                                >
+                                  {header}
+                                </TableCell>
+                              ))}
+                          </TableRow>
+                        </TableHead>
+                        <TableBody>
+                          {data.map((row, indexNum) => {
+                            const labelId = `enhanced-table-checkbox-${indexNum}`;
+
+                            return (
+                              <TableRow
+                                key={row.iId}
+                                hover
+                                role="checkbox"
+                                className={`table-row `}
+                                tabIndex={-1}
+                                sx={{
+                                  cursor: "pointer",
+                                }}
+                              >
+                                <TableCell
+                                  style={{
+                                    padding: "4px",
+                                    border: "1px solid #ddd",
+                                  }}
+                                  padding="checkbox"
+                                  align="center"
+                                >
+                                  <PopupState
+                                    variant="popover"
+                                    popupId="demo-popup-popover"
+                                  >
+                                    {(popupState) => (
+                                      <div>
+                                        <IconButton
+                                          aria-label="options"
+                                          {...bindTrigger(popupState)}
+                                          sx={{
+                                            padding: 0,
+                                            fontSize: "1.2rem",
+                                          }}
+                                        >
+                                          <MoreVertIcon
+                                            sx={{ fontSize: "1.2rem" }}
+                                          />
+                                        </IconButton>
+                                        <Popover
+                                          {...bindPopover(popupState)}
+                                          anchorOrigin={{
+                                            vertical: "bottom",
+                                            horizontal: "center",
+                                          }}
+                                          transformOrigin={{
+                                            vertical: "top",
+                                            horizontal: "center",
+                                          }}
+                                        >
+                                          <Stack direction="row">
+                                            <IconButton
+                                              // onClick={() => {
+                                              //   handleRow(1);
+                                              //   popupState.close(); // Close the popover
+                                              // }}
+                                              aria-label="add"
+                                              color="#8c99e0"
+                                              sx={{
+                                                fontSize: "1.2rem",
+                                                color: "#8c99e0",
+                                              }}
+                                            >
+                                              <AddCircleIcon
+                                                sx={{ fontSize: "1.2rem" }}
+                                              />
+                                            </IconButton>
+                                            {data?.length > 1 ? (
+                                              <IconButton
+                                                // onClick={() => {
+                                                //   handleRow(0);
+                                                //   popupState.close(); // Close the popover
+                                                // }}
+                                                aria-label="remove"
+                                                sx={{
+                                                  fontSize: "1.2rem",
+                                                  color: "#8c99e0",
+                                                }}
+                                              >
+                                                <RemoveCircleIcon
+                                                  sx={{ fontSize: "1.2rem" }}
+                                                />
+                                              </IconButton>
+                                            ) : null}
+                                          </Stack>
+                                        </Popover>
+                                      </div>
+                                    )}
+                                  </PopupState>
+                                </TableCell>
+                                {Object.keys(data[0]).map((column, index) => {
+                                  if (column !== "iId") {
+                                    return (
+                                      <TableCell
+                                        style={{
+                                          padding: "4px",
+                                          border: "1px solid #ddd",
+                                          whiteSpace: "nowrap",
+                                          overflow: "hidden",
+                                          textOverflow: "ellipsis",
+                                          width: `calc(100% / 3)`,
+                                          minWidth: "100px",
+                                          maxWidth: 150,
+                                        }}
+                                        key={index + labelId}
+                                        component="th"
+                                        id={labelId}
+                                        scope="row"
+                                        padding="normal"
+                                        align="left"
+                                      >
+                                        {column === "Exp.Date" ? (
+                                            <TableModalInput
+                                            type="date"
+                                            value={data}
+                                            setValue={setData}
+                                            column={column}
+                                            row={indexNum}
+                                          />
+                                        ) : (
+                                          row[column]
+                                        )}
+                                      </TableCell>
+                                    );
+                                  }
+                                })}
+                              </TableRow>
+                            );
+                          })}
+                        </TableBody>
+                      </Table>
+                    ) : null}
+                  </TableContainer>
+                </CardContent>
               </form>
             </div>
           </div>

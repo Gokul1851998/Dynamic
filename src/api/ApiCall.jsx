@@ -89,3 +89,14 @@ export const getLogin = async (payload) => {
     }
   };
 
+  export const getMainSettings = async (payload) => {
+    try {
+      const response = await axios.get(`${baseUrl}GetMainSettings`, {
+        params: payload,
+      });
+      return response?.data;
+    } catch (error) {
+      console.log('GetMainSettings',error);
+    }
+  };
+

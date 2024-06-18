@@ -10,16 +10,18 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@emotion/react": "^11.11.3",
-    "@emotion/styled": "^11.11.0",
+    "@emotion/react": "^11.11.4",
+    "@emotion/styled": "^11.11.5",
     "@fontsource/roboto": "^5.0.8",
     "@fortawesome/fontawesome-free": "^6.5.1",
     "@material-tailwind/react": "^2.1.8",
     "@mui/icons-material": "^5.15.3",
-    "@mui/material": "^5.15.3",
+    "@mui/material": "^5.15.20",
     "@mui/styled-engine-sc": "^6.0.0-alpha.11",
     "@mui/system": "^5.15.4",
+    "@mui/x-date-pickers": "^7.7.0",
     "axios": "^1.6.4",
+    "dayjs": "^1.11.11",
     "material-ui-popup-state": "^5.1.2",
     "mdb-react-ui-kit": "^7.1.0",
     "react": "^18.2.0",
@@ -27,7 +29,7 @@
     "react-loader-spinner": "^6.1.6",
     "react-router-dom": "^6.21.1",
     "rsuite": "^5.49.0",
-    "styled-components": "^6.1.6",
+    "styled-components": "^6.1.11",
     "sweetalert2": "^11.10.2"
   },
   "devDependencies": {

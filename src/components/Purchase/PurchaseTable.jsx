@@ -226,7 +226,6 @@ export default function PurchaseTable() {
     });
     if (response?.Status === "Success") {
       const myObject = JSON.parse(response?.ResultData);
-      console.log(myObject);
       setData(myObject?.Table);
     }
     handleClose();
@@ -237,7 +236,6 @@ export default function PurchaseTable() {
   }, [searchQuery,page, rowsPerPage, order, orderBy]);
 
   const handleRequestSort = (event, property) => {
-    // console.log(property);
     // const isAsc = orderBy === property && order === "asc";
     setOrder(orderBy ? "desc" : "asc");
     setOrderBy(property);
@@ -272,7 +270,6 @@ export default function PurchaseTable() {
   };
 
   const handleChangePage = (event, newPage) => {
-    console.log(newPage);
     setPage(newPage - 1);
   };
 

@@ -212,7 +212,6 @@ export default function BodyTable({ tableData }) {
   };
 
   const handleBatchOpen =(value)=>{
-    console.log(value);
     setBatchModal(true)
     setQty(value)
   }
@@ -677,7 +676,7 @@ export default function BodyTable({ tableData }) {
           )}
         </MDBCard>
       </>
-      <BatchModal isOpen={batchModal} handleCloseModal={handleBatchClose}  />
+      <BatchModal isOpen={batchModal} handleCloseModal={handleBatchClose} qty={qty}  />
       <Loader open={open} handleClose={handleClose} />
     </>
   );

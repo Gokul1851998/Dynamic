@@ -235,7 +235,6 @@ export default function DetailPage({ iUser, iDocType, iTransId, action }) {
         });
         if (response?.Status === "Success") {
           const myObject = JSON.parse(response.ResultData);
-          console.log(myObject);
           setHeader(myObject.Header[0]);
           setBody(myObject?.Body);
         }

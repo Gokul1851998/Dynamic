@@ -16,7 +16,7 @@ import PowerSettingsNewIcon from "@mui/icons-material/PowerSettingsNew";
 import sang_logo from "../../assets/sangsolution.png";
 import { useNavigate } from "react-router-dom";
 import { Stack } from "@mui/material";
-import { getMenu } from "../../api/ApiCall";
+import { getMainSettings, getMenu } from "../../api/ApiCall";
 
 const settings = ["Profile", "Account", "Dashboard", "Logout"];
 
@@ -31,6 +31,8 @@ function Header() {
   const [menuId, setMenuId] = React.useState(0)
   React.useEffect(() => {
     const fetchData = async () => {
+       const response2 = await getMainSettings()
+       console.log(JSON.parse(response2.ResultData));
       const response = await getMenu({ iUser });
       if (response.Status === "Success") {
         const myObject = JSON.parse(response.ResultData);
