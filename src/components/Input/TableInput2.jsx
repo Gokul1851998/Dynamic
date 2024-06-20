@@ -1,23 +1,14 @@
 import { TextField } from "@mui/material";
 import React from "react";
 
-export default function TableInput2({ type, column, row, value, setValue }) {
-  const handleChange = (e) => {
-  if(column !== "Serial No"){
-    const newValue = e.target.value;
-    const updatedValue = [...value];
-    updatedValue[row][column] = newValue;
-    setValue(updatedValue);
-  }
-  };
-
+export default function TableInput({ type, column, row, value, setValue }) {
+  console.log(value[row][column]);
   return (
     <TextField
       margin="normal"
       size="small"
       id={column}
       value={value[row][column]}
-      onChange={handleChange}
       type={type}
       autoComplete="off"
       autoFocus

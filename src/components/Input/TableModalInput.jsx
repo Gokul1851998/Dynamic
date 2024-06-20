@@ -22,7 +22,7 @@ export default function TableModalInput({ type, column, row, value, setValue }) 
       sx={{
         padding: 0,
         margin: 0,
-        width: 225, // Adjust the width as needed
+        width: 220, // Adjust the width as needed
         "& .MuiInputBase-root": {
           height: 30, // Adjust the height of the input area
         },
@@ -38,9 +38,7 @@ export default function TableModalInput({ type, column, row, value, setValue }) 
         "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
           borderColor: "currentColor", // Keeps the current border color
         },
-        "&:hover .MuiOutlinedInput-notchedOutline": {
-          borderColor: "currentColor", // Optional: Keeps the border color on hover
-        },
+      
       }}
     />
   );

@@ -61,8 +61,8 @@ const FormContent = ({ header, receiveData, headerFeilds }) => {
   useEffect(() => {
     if (header) {
       const formatDate = (dateString) => {
-        const dateParts = dateString.split("-");
-        if (dateParts.length === 3) {
+        const dateParts = dateString?.split("-");
+        if (dateParts?.length === 3) {
           // Assuming the date format is "dd-mm-yyyy"
           const [day, month, year] = dateParts;
           return `${year}-${month}-${day}`;
@@ -81,7 +81,7 @@ const FormContent = ({ header, receiveData, headerFeilds }) => {
         "Document No": header?.sDocNo || "",
         Date: formatDate(header?.iDate) || "",
         Vendor: header?.iVendor || "",
-        Duedate: formatDate(header?.iDueDate) || "",
+        Duedate: formatDate(header?.iDueDate) || "",  
         "Vendor invoice no": header?.sVendorInvNo || "",
         Narration: header?.sNarration || "",
         PaymentTerms: header?.iPaymentTerms || "",
@@ -252,11 +252,16 @@ export default function DetailPage({ iUser, iDocType, iTransId, action }) {
 
   const handleSave = () => {};
 
+  const handleClear = ()=>{
+    setHeader([])
+    setBody([])
+  }
+
   return (
     <>
       <Stack direction="row" spacing={1} padding={1} justifyContent="flex-end">
         <Button
-          onClick={() => setHeader()}
+          onClick={handleClear}
           variant="contained"
           startIcon={<AddIcon />}
           style={buttonStyle}

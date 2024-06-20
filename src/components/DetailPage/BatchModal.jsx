@@ -60,7 +60,8 @@ export default function BatchModal({ isOpen, handleCloseModal, qty }) {
   };
 
   useEffect(() => {
-    setData([{ iId: 1, Batch: "", "Exp.Date": "", "Tot.Qty": "" }]);
+    const currentDate = new Date().toISOString().split("T")[0]; // Formats the date as YYYY-MM-DD
+    setData([{ iId: 1, Batch: "", "Exp.Date": currentDate, "Tot.Qty": "" }]);
   }, []);
 
   const handleOpenAlert = () => {
@@ -115,7 +116,7 @@ export default function BatchModal({ isOpen, handleCloseModal, qty }) {
                   direction="row"
                   spacing={1}
                   padding={2}
-                  justifyContent="flex-end"
+                  justifyContent="flex-start"
                 >
                   <Typography
                     sx={{ flex: "1 1 100%" }}
@@ -125,16 +126,6 @@ export default function BatchModal({ isOpen, handleCloseModal, qty }) {
                   >
                     Batch Creation
                   </Typography>
-                  <Button variant="contained" style={buttonStyle}>
-                    Load
-                  </Button>
-                  <Button
-                    onClick={handleCloseModal}
-                    variant="contained"
-                    style={buttonStyle}
-                  >
-                    Close
-                  </Button>
                 </Stack>
 
                 <Box
@@ -179,7 +170,7 @@ export default function BatchModal({ isOpen, handleCloseModal, qty }) {
                   <TableContainer
                     style={{
                       display: "block",
-                      maxHeight: "calc(100vh - 200px)",
+                      maxHeight: "calc(100vh - 300px)",
                       overflowY: "auto",
                       scrollbarWidth: "thin",
                       scrollbarColor: "#888 #f5f5f5",
@@ -328,33 +319,42 @@ export default function BatchModal({ isOpen, handleCloseModal, qty }) {
                                   if (column !== "iId") {
                                     return (
                                       <TableCell
-                                        style={{
-                                          padding: "4px",
+                                        sx={{
+                                          padding: 0,
                                           border: "1px solid #ddd",
                                           whiteSpace: "nowrap",
-                                          overflow: "hidden",
-                                          textOverflow: "ellipsis",
-                                          width: `calc(100% / 3)`,
-                                          minWidth: "100px",
-                                          maxWidth: 150,
                                         }}
                                         key={index + labelId}
                                         component="th"
                                         id={labelId}
                                         scope="row"
-                                        padding="normal"
+                                        padding="0px"
                                         align="left"
                                       >
                                         {column === "Exp.Date" ? (
-                                            <TableModalInput
+                                          <TableModalInput
                                             type="date"
                                             value={data}
                                             setValue={setData}
                                             column={column}
                                             row={indexNum}
                                           />
+                                        ) : column === "Tot.Qty" ? (
+                                          <TableModalInput
+                                            type="number"
+                                            value={data}
+                                            setValue={setData}
+                                            column={column}
+                                            row={indexNum}
+                                          />
                                         ) : (
-                                          row[column]
+                                          <TableModalInput
+                                            type="text"
+                                            value={data}
+                                            setValue={setData}
+                                            column={column}
+                                            row={indexNum}
+                                          />
                                         )}
                                       </TableCell>
                                     );
@@ -368,6 +368,23 @@ export default function BatchModal({ isOpen, handleCloseModal, qty }) {
                     ) : null}
                   </TableContainer>
                 </CardContent>
+                <Stack
+                  direction="row"
+                  spacing={1}
+                  padding={2}
+                  justifyContent="flex-end"
+                >
+                  <Button variant="contained" style={buttonStyle}>
+                    Load
+                  </Button>
+                  <Button
+                    onClick={handleCloseModal}
+                    variant="contained"
+                    style={buttonStyle}
+                  >
+                    Close
+                  </Button>
+                </Stack>
               </form>
             </div>
           </div>

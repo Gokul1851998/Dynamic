@@ -17,7 +17,7 @@ const AutoComplete1 = ({ formData, setFormData, column, row, api, iTag }) => {
 
   const handleAutocompleteChange = (event, newValue) => {
     let updatedFormData = [...formData];
-    updatedFormData[row][column] = newValue;
+    updatedFormData[row][column] = newValue.sName;
     setFormData(updatedFormData);
     setiTypeF2(1);
   };

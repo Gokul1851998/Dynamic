@@ -54,6 +54,8 @@ import { MDBCard } from "mdb-react-ui-kit";
 import AutoComplete1 from "../AutoComplete/AutoComplete1";
 import TableInput from "../Input/TableInput";
 import BatchModal from "./BatchModal";
+import AutoCompleteProduct from "../AutoComplete/AutoCompleteProduct";
+import SerialNoModal from "./SerialNoModal";
 
 function descendingComparator(a, b, orderBy) {
   if (b[orderBy] < a[orderBy]) {
@@ -114,9 +116,7 @@ function EnhancedTableHead(props) {
             whiteSpace: "nowrap",
           }}
           padding="checkbox"
-        >
-       
-        </TableCell>
+        ></TableCell>
         {rows.map((header, index) => {
           if (
             header !== "iTransDtId" &&
@@ -201,8 +201,10 @@ export default function BodyTable({ tableData }) {
   const [sortDir, setSortDir] = React.useState("asc");
   const [open, setOpen] = React.useState(false);
   const [navigate, setNavigate] = React.useState(false);
-  const [batchModal, setBatchModal] = React.useState(false)
-  const [qty, setQty] = React.useState(0)
+  const [batchModal, setBatchModal] = React.useState(false);
+  const [qty, setQty] = React.useState(0);
+  const [modal, setModal] = React.useState(0);
+  const [row, setRow] = React.useState(0)
   const tableContainerRef = React.useRef(null);
 
   const buttonStyle = {
@@ -211,15 +213,28 @@ export default function BodyTable({ tableData }) {
     backgroundColor: "#7581c6", // Set background color
   };
 
-  const handleBatchOpen =(value)=>{
-    setBatchModal(true)
-    setQty(value)
-  }
+  const handleBatchOpen = (value, type) => {
+    setModal(type)
+    setQty(data[value].Quantity);
+    setBatchModal(true);
+    setRow(value)
+  };
 
-  const handleBatchClose =()=>{
-    setBatchModal(false)
-  }
+  const handleBatchClose = () => {
+    setBatchModal(false);
+    setQty(0);
+    setModal(0);
+    setRow(0)
+  };
 
+
+  const handleBatchSubmit = (values) => {
+    let update = [...data]
+    update[row]["Serial No"] = values
+    setData(update)
+    handleBatchClose()
+  };
+  console.log(data);
   const handleClose = () => {
     setOpen(false);
   };
@@ -227,37 +242,72 @@ export default function BodyTable({ tableData }) {
     setOpen(true);
   };
 
+  React.useEffect(() => {
+    const tableContainer = tableContainerRef.current;
+    if (tableContainer) {
+      // Set horizontal scrollbar to the left
+      tableContainer.scrollLeft = 0;
+      // Set vertical scrollbar to the top
+      tableContainer.scrollTop = tableContainer.scrollHeight;
+    }
+  }, [tableData]);
+
   const fetchData = async () => {
     handleOpen();
- if (tableContainerRef.current) {
-      tableContainerRef.current.scrollLeft = 0;
+    if (tableData && tableData.length) {
+      const dataArrage = tableData.map((data) => ({
+        iTransDtId: data?.iTransDtId,
+        Employee: data?.sTag4,
+        EmployeeId: data?.iTag4,
+        Project: data?.sTag3,
+        ProjectId: data?.iTag3,
+        Company: data?.sTag2,
+        Warehouse: data?.sTag1,
+        Item: data?.iProduct,
+        Description: data?.sItemDesc,
+        Account: data?.iAccount,
+        Unit: data?.iUnit,
+        Quantity: data?.fQty,
+        Rate: data?.fRate,
+        Gross: data?.fGross,
+        Batch: data?.sBatchNo,
+        "Serial No": data?.sSerialNo,
+        "Add Charge": null,
+        "Disc%": "",
+        "Total Dis": "",
+        Net: "",
+        Stock: data?.nStockValue,
+        Remark: data?.sRemarks || " ",
+      }));
+      setData(dataArrage);
+    } else {
+      setData([
+        {
+          iTransDtId: "",
+          Employee: "",
+          EmployeeId: 0,
+          Project: "",
+          ProjectId: 0,
+          Company: "",
+          Warehouse: "",
+          Item: "",
+          Description: "",
+          Account: "",
+          Unit: "",
+          Quantity: "",
+          Rate: "",
+          Gross: "",
+          Batch: "",
+          "Serial No": "",
+          "Add Charge": null,
+          "Disc%": "",
+          "Total Dis": "",
+          Net: "",
+          Stock: "",
+          Remark: "",
+        },
+      ]);
     }
-    const dataArrage = tableData.map((data) => ({
-      iTransDtId: data?.iTransDtId,
-      Employee: data?.sTag4,
-      EmployeeId: data?.iTag4,
-      Project: data?.sTag3,
-      ProjectId: data?.iTag3,
-      Company: data?.sTag2,
-      Warehouse: data?.sTag1,
-      Item: data?.iProduct,
-      Description: data?.sItemDesc,
-      Account: data?.iAccount,
-      Unit: data?.iUnit,
-      Quantity: data?.fQty,
-      Rate: data?.fRate,
-      Gross: data?.fGross,
-      Batch: data?.sBatchNo,
-      "Serial No": data?.sSerialNo,
-      "Add Charge": null,
-      "Disc%": "",
-      "Total Dis": "",
-      Net: "",
-      Stock: data?.nStockValue,
-      Remark: data?.sRemarks || " ",
-    }));
-    setData(dataArrage);
-
     handleClose();
   };
 
@@ -280,24 +330,7 @@ export default function BodyTable({ tableData }) {
     setSelected([]);
   };
 
-  const handleClick = (event, id) => {
-    const selectedIndex = selected.indexOf(id);
-    let newSelected = [];
 
-    if (selectedIndex === -1) {
-      newSelected = newSelected.concat(selected, id);
-    } else if (selectedIndex === 0) {
-      newSelected = newSelected.concat(selected.slice(1));
-    } else if (selectedIndex === selected.length - 1) {
-      newSelected = newSelected.concat(selected.slice(0, -1));
-    } else if (selectedIndex > 0) {
-      newSelected = newSelected.concat(
-        selected.slice(0, selectedIndex),
-        selected.slice(selectedIndex + 1)
-      );
-    }
-    setSelected(newSelected);
-  };
 
   const handleChangePage = (event, newPage) => {
     setPage(newPage - 1);
@@ -424,7 +457,7 @@ export default function BodyTable({ tableData }) {
           /> */}
           {data.length > 0 && (
             <TableContainer
-            ref={tableContainerRef}
+              ref={tableContainerRef}
               style={{
                 display: "block",
                 maxHeight: "calc(100vh - 400px)",
@@ -436,7 +469,6 @@ export default function BodyTable({ tableData }) {
               }}
             >
               <Table
-              
                 sx={{ minWidth: 750 }}
                 aria-labelledby="tableTitle"
                 size={dense ? "small" : "medium"}
@@ -467,7 +499,6 @@ export default function BodyTable({ tableData }) {
                       <TableRow
                         hover
                         className={`table-row `}
-                        
                         role="checkbox"
                         aria-checked={isItemSelected}
                         tabIndex={-1}
@@ -476,69 +507,69 @@ export default function BodyTable({ tableData }) {
                         sx={{ cursor: "pointer" }}
                       >
                         <TableCell padding="checkbox">
-                        <PopupState
-                              variant="popover"
-                              popupId="demo-popup-popover"
-                            >
-                              {(popupState) => (
-                                <div>
-                                  <IconButton
-                                    aria-label="options"
-                                    {...bindTrigger(popupState)}
-                                    sx={{ padding: 0, fontSize: "1.2rem" }}
-                                  >
-                                    <MoreVertIcon sx={{ fontSize: "1.2rem" }} />
-                                  </IconButton>
-                                  <Popover
-                                    {...bindPopover(popupState)}
-                                    anchorOrigin={{
-                                      vertical: "bottom",
-                                      horizontal: "center",
-                                    }}
-                                    transformOrigin={{
-                                      vertical: "top",
-                                      horizontal: "center",
-                                    }}
-                                  >
-                                    <Stack direction="row">
+                          <PopupState
+                            variant="popover"
+                            popupId="demo-popup-popover"
+                          >
+                            {(popupState) => (
+                              <div>
+                                <IconButton
+                                  aria-label="options"
+                                  {...bindTrigger(popupState)}
+                                  sx={{ padding: 0, fontSize: "1.2rem" }}
+                                >
+                                  <MoreVertIcon sx={{ fontSize: "1.2rem" }} />
+                                </IconButton>
+                                <Popover
+                                  {...bindPopover(popupState)}
+                                  anchorOrigin={{
+                                    vertical: "bottom",
+                                    horizontal: "center",
+                                  }}
+                                  transformOrigin={{
+                                    vertical: "top",
+                                    horizontal: "center",
+                                  }}
+                                >
+                                  <Stack direction="row">
+                                    <IconButton
+                                      onClick={() => {
+                                        handleRow(1);
+                                        popupState.close(); // Close the popover
+                                      }}
+                                      aria-label="add"
+                                      color="#8c99e0"
+                                      sx={{
+                                        fontSize: "1.2rem",
+                                        color: "#8c99e0",
+                                      }}
+                                    >
+                                      <AddCircleIcon
+                                        sx={{ fontSize: "1.2rem" }}
+                                      />
+                                    </IconButton>
+                                    {data?.length > 1 ? (
                                       <IconButton
                                         onClick={() => {
-                                          handleRow(1);
+                                          handleRow(0);
                                           popupState.close(); // Close the popover
                                         }}
-                                        aria-label="add"
-                                        color="#8c99e0"
+                                        aria-label="remove"
                                         sx={{
                                           fontSize: "1.2rem",
                                           color: "#8c99e0",
                                         }}
                                       >
-                                        <AddCircleIcon
+                                        <RemoveCircleIcon
                                           sx={{ fontSize: "1.2rem" }}
                                         />
                                       </IconButton>
-                                      {data?.length > 1 ? (
-                                        <IconButton
-                                          onClick={() => {
-                                            handleRow(0);
-                                            popupState.close(); // Close the popover
-                                          }}
-                                          aria-label="remove"
-                                          sx={{
-                                            fontSize: "1.2rem",
-                                            color: "#8c99e0",
-                                          }}
-                                        >
-                                          <RemoveCircleIcon
-                                            sx={{ fontSize: "1.2rem" }}
-                                          />
-                                        </IconButton>
-                                      ) : null}
-                                    </Stack>
-                                  </Popover>
-                                </div>
-                              )}
-                            </PopupState>
+                                    ) : null}
+                                  </Stack>
+                                </Popover>
+                              </div>
+                            )}
+                          </PopupState>
                         </TableCell>
                         {Object.keys(data[0]).map((column, index) => {
                           if (
@@ -554,7 +585,6 @@ export default function BodyTable({ tableData }) {
                                     border: "1px solid #ddd",
                                     whiteSpace: "nowrap",
                                   }}
-                                  
                                   key={index + labelId}
                                   component="th"
                                   id={labelId}
@@ -599,7 +629,7 @@ export default function BodyTable({ tableData }) {
                                       iTag={1}
                                     />
                                   ) : column === "Item" ? (
-                                    <AutoComplete1
+                                    <AutoCompleteProduct
                                       formData={data}
                                       setFormData={setData}
                                       column={column}
@@ -615,7 +645,7 @@ export default function BodyTable({ tableData }) {
                                       column={column}
                                       row={indexNum}
                                     />
-                                  ): column === "Account" ? (
+                                  ) : column === "Account" ? (
                                     <AutoComplete1
                                       formData={data}
                                       setFormData={setData}
@@ -624,7 +654,7 @@ export default function BodyTable({ tableData }) {
                                       api={getMasters}
                                       iTag={1}
                                     />
-                                  ): column === "Quantity" ? (
+                                  ) : column === "Quantity" ? (
                                     <TableInput
                                       type="number"
                                       value={data}
@@ -632,7 +662,7 @@ export default function BodyTable({ tableData }) {
                                       column={column}
                                       row={indexNum}
                                     />
-                                  ): column === "Rate" ? (
+                                  ) : column === "Rate" ? (
                                     <TableInput
                                       type="number"
                                       value={data}
@@ -640,20 +670,35 @@ export default function BodyTable({ tableData }) {
                                       column={column}
                                       row={indexNum}
                                     />
-                                  ): column === "Batch" ? (
-                                    <div onClick={()=>handleBatchOpen(row.Quantity
-                                    )}>
-                                    <TableInput
-                            
-                                      type="number"
-                                      value={data}
-                                      setValue={setData}
-                                      column={column}
-                                      row={indexNum}
-                                    />
-                             
+                                  ) : column === "Batch" ? (
+                                    <div
+                                      onClick={() =>
+                                        handleBatchOpen(indexNum, 1)
+                                      }
+                                    >
+                                      <TableInput
+                                        type="number"
+                                        value={data}
+                                        setValue={setData}
+                                        column={column}
+                                        row={indexNum}
+                                      />
                                     </div>
-                                  )   : (
+                                  ) : column === "Serial No" ? (
+                                    <div
+                                      onClick={() =>
+                                        handleBatchOpen(indexNum, 2)
+                                      }
+                                    >
+                                      <TableInput
+                                        type="text"
+                                        value={data}
+                                        setValue={setData}
+                                        column={column}
+                                        row={indexNum}
+                                      />
+                                    </div>
+                                  ) : (
                                     <TableInput
                                       type="text"
                                       value={data}
@@ -676,7 +721,21 @@ export default function BodyTable({ tableData }) {
           )}
         </MDBCard>
       </>
-      <BatchModal isOpen={batchModal} handleCloseModal={handleBatchClose} qty={qty}  />
+      {modal === 1 ? (
+        <BatchModal
+          isOpen={batchModal}
+          handleCloseModal={handleBatchClose}
+          qty={qty}
+        />
+      ) : modal === 2 ? (
+        <SerialNoModal
+          isOpen={batchModal}
+          handleCloseModal={handleBatchClose}
+          qty={qty}
+          handleSubmit = {handleBatchSubmit}
+        />
+      ) : null}
+
       <Loader open={open} handleClose={handleClose} />
     </>
   );
