@@ -41,12 +41,15 @@ import Loader from "../Loader/Loader";
 import ErrorMessage from "../ErrorMessage/ErrorMessage";
 import TableInput from "../Input/TableInput";
 import TableModalInput from "../Input/TableModalInput";
+import AutoComplete2 from "../AutoComplete/AutoComplete2";
+import { getMasters } from "../../api/ApiCall";
+import NormalInput from "../Input/NormalInput";
 
 const Alert = React.forwardRef(function Alert(props, ref) {
   return <MuiAlert elevation={6} ref={ref} variant="filled" {...props} />;
 });
 
-export default function SerialNoModal({
+export default function AddCharges1({
   isOpen,
   handleCloseModal,
   qty,
@@ -137,91 +140,49 @@ export default function SerialNoModal({
           <div className="modal-dialog modal-dialog-centered modal-md">
             <div className="modal-content">
               <form>
-                <Stack
-                  direction="row"
-                  spacing={1}
-                  padding={2}
-                  justifyContent="flex-start"
-                >
-                  <Typography
-                    sx={{ flex: "1 1 100%" }}
-                    variant="h6"
-                    id="tableTitle"
-                    component="div"
-                  >
-                    Serial Number Generation
-                  </Typography>
-                </Stack>
-
-                <Box
-                  sx={{
-                    width: "auto",
-                    paddingLeft: 2,
-                    zIndex: 1,
-                    backgroundColor: "#ffff",
-                    borderRadius: 2,
-                  }}
-                >
-                  <TextField
-                    margin="normal"
-                    size="small"
-                    aria-readonly
-                    type="number"
-                    value={qty}
-                    label="Quantity"
-                    autoComplete="off"
-                    autoFocus
-                    sx={{
-                      padding: 0,
-                      margin: 0,
-                      marginRight: 2, // Add margin between the two TextFields
-                      width: "auto", // Adjust the width as needed
-                      "& .MuiInputBase-root": {
-                        height: 30, // Adjust the height of the input area
-                      },
-                      "& .MuiInputLabel-root": {
-                        transform: "translate(10px, 5px) scale(0.9)", // Adjust label position when not focused
-                      },
-                      "& .MuiInputLabel-shrink": {
-                        transform: "translate(14px, -9px) scale(0.75)", // Adjust label position when focused
-                      },
-                      "& .MuiInputBase-input": {
-                        fontSize: "0.75rem", // Adjust the font size of the input text
-                      },
-                    }}
-                  />
-
-                  <TextField
-                    margin="normal"
-                    size="small"
-                    aria-readonly
-                    type="text"
-                    value={start}
-                    onChange={(e) => setStart(e.target.value)}
-                    label="Start Limit"
-                    autoComplete="off"
-                    autoFocus
-                    sx={{
-                      padding: 0,
-                      margin: 0,
-                      width: "auto", // Adjust the width as needed
-                      "& .MuiInputBase-root": {
-                        height: 30, // Adjust the height of the input area
-                      },
-                      "& .MuiInputLabel-root": {
-                        transform: "translate(10px, 5px) scale(0.9)", // Adjust label position when not focused
-                      },
-                      "& .MuiInputLabel-shrink": {
-                        transform: "translate(14px, -9px) scale(0.75)", // Adjust label position when focused
-                      },
-                      "& .MuiInputBase-input": {
-                        fontSize: "0.75rem", // Adjust the font size of the input text
-                      },
-                    }}
-                  />
-                </Box>
-
-                <CardContent></CardContent>
+                <CardContent>
+              
+                    <MDBRow className="mb-4">
+                      <MDBCol>
+                        <AutoComplete2
+                          api={getMasters}
+                          iTag={13}
+                          label="Currency"
+                        />
+                      </MDBCol>
+                      <MDBCol>
+                        <NormalInput
+                          type="number"
+                          label="ExchangeRate"
+                        />
+                      </MDBCol>
+                    </MDBRow>
+                    <MDBRow className="mb-4">
+                      <MDBCol>
+                      <NormalInput
+                          type="number"
+                          label="Amount"
+                        />
+                      </MDBCol>
+                      <MDBCol>
+                      <NormalInput
+                          type="number"
+                          label="Trans Amount"
+                          read={true}
+                        />
+                      </MDBCol>
+                    </MDBRow>
+                    <MDBRow className="mb-4">
+                      <MDBCol>
+                      <NormalInput
+                          type="number"
+                          label="Base Amount"
+                          read={true}
+                        />
+                      </MDBCol>
+                    
+                    </MDBRow>
+                 </CardContent>
                 <Stack
                   direction="row"
                   spacing={1}

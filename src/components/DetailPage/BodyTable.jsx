@@ -56,6 +56,7 @@ import TableInput from "../Input/TableInput";
 import BatchModal from "./BatchModal";
 import AutoCompleteProduct from "../AutoComplete/AutoCompleteProduct";
 import SerialNoModal from "./SerialNoModal";
+import AddCharges1 from "./AddCharges1";
 
 function descendingComparator(a, b, orderBy) {
   if (b[orderBy] < a[orderBy]) {
@@ -94,6 +95,7 @@ function EnhancedTableHead(props) {
     rowCount,
     onRequestSort,
     rows,
+    handleBatchOpen,
   } = props;
   const createSortHandler = (property) => (event) => {
     onRequestSort(event, property);
@@ -125,15 +127,28 @@ function EnhancedTableHead(props) {
           ) {
             // Exclude "iId", "iAssetType", and "sAltName" from the header
             return (
-              <TableCell
-                sx={{ border: "1px solid #ddd", color: "#FFFF" }}
-                key={index}
-                align="left" // Set the alignment to left
-                padding="normal"
-                sortDirection={orderBy === header ? order : false}
-              >
-                {`${header}`}
-              </TableCell>
+              <>
+                {header === "Add Charge" ? (
+                  <TableCell
+                  onClick={()=>handleBatchOpen(0, 3)}
+                    sx={{ border: "1px solid #ddd", color: "#FFFF" }}
+                    key={index}
+                    align="left" // Set the alignment to left
+                    padding="normal"
+                  >
+                    {`${header}`}
+                  </TableCell>
+                ) : (
+                  <TableCell
+                    sx={{ border: "1px solid #ddd", color: "#FFFF" }}
+                    key={index}
+                    align="left" // Set the alignment to left
+                    padding="normal"
+                  >
+                    {`${header}`}
+                  </TableCell>
+                )}
+              </>
             );
           }
         })}
@@ -204,7 +219,7 @@ export default function BodyTable({ tableData }) {
   const [batchModal, setBatchModal] = React.useState(false);
   const [qty, setQty] = React.useState(0);
   const [modal, setModal] = React.useState(0);
-  const [row, setRow] = React.useState(0)
+  const [row, setRow] = React.useState(0);
   const tableContainerRef = React.useRef(null);
 
   const buttonStyle = {
@@ -214,27 +229,26 @@ export default function BodyTable({ tableData }) {
   };
 
   const handleBatchOpen = (value, type) => {
-    setModal(type)
+    setModal(type);
     setQty(data[value].Quantity);
     setBatchModal(true);
-    setRow(value)
+    setRow(value);
   };
 
   const handleBatchClose = () => {
     setBatchModal(false);
     setQty(0);
     setModal(0);
-    setRow(0)
+    setRow(0);
   };
-
 
   const handleBatchSubmit = (values) => {
-    let update = [...data]
-    update[row]["Serial No"] = values
-    setData(update)
-    handleBatchClose()
+    let update = [...data];
+    update[row]["Serial No"] = values;
+    setData(update);
+    handleBatchClose();
   };
-  console.log(data);
+  
   const handleClose = () => {
     setOpen(false);
   };
@@ -329,8 +343,6 @@ export default function BodyTable({ tableData }) {
     }
     setSelected([]);
   };
-
-
 
   const handleChangePage = (event, newPage) => {
     setPage(newPage - 1);
@@ -481,6 +493,7 @@ export default function BodyTable({ tableData }) {
                   onRequestSort={handleRequestSort}
                   rowCount={data.length}
                   rows={Object.keys(data[0])}
+                  handleBatchOpen={handleBatchOpen}
                 />
 
                 <TableBody>
@@ -732,7 +745,14 @@ export default function BodyTable({ tableData }) {
           isOpen={batchModal}
           handleCloseModal={handleBatchClose}
           qty={qty}
-          handleSubmit = {handleBatchSubmit}
+          handleSubmit={handleBatchSubmit}
+        />
+      ): modal === 3 ? (
+        <AddCharges1
+          isOpen={batchModal}
+          handleCloseModal={handleBatchClose}
+          qty={qty}
+          handleSubmit={handleBatchSubmit}
         />
       ) : null}
 

@@ -53,7 +53,7 @@ const FormContent = ({ header, receiveData, headerFeilds }) => {
   ];
   const iUser = localStorage.getItem("userId");
   const [formData, setFormData] = useState({});
-  const [vender, setVender] = useState();
+  const [vender, setVender] = useState("");
   const [suggestionVender, setSuggestionVender] = useState([]);
   const [stock, setStock] = useState(false);
   const [receipt, setReceipt] = useState(false);
@@ -218,6 +218,7 @@ export default function DetailPage({ iUser, iDocType, iTransId, action }) {
       const response = await getDocSettings({ iDoctype: 2 });
       if (response?.Status === "Success") {
         const myObject = JSON.parse(response?.ResultData);
+        console.log(myObject);
         setHeaderFeilds(myObject?.Header);
       }
     };
