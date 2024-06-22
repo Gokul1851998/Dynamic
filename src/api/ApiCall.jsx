@@ -25,12 +25,12 @@ export const getLogin = async (payload) => {
 
   export const getDocSettings = async (payload) => {
     try {
-      const response = await axios.get(`${baseUrl}GetDocSettings`, {
+      const response = await axios.get(`${baseUrl}GetDocSettings_New`, {
         params: payload,
       });
       return response?.data;
     } catch (error) {
-      console.log('GetDocSettings',error);
+      console.log('GetDocSettings_New',error);
     }
   };
 

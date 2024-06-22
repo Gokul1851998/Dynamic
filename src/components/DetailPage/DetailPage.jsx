@@ -215,7 +215,7 @@ export default function DetailPage({ iUser, iDocType, iTransId, action }) {
 
   useEffect(() => {
     const fetchData = async () => {
-      const response = await getDocSettings({ iDoctype: 2 });
+      const response = await getDocSettings({ iDoctype: 2 }); b
       if (response?.Status === "Success") {
         const myObject = JSON.parse(response?.ResultData);
         console.log(myObject);
