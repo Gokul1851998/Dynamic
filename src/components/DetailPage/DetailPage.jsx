@@ -61,10 +61,9 @@ const DetailPage = ({ iUser, iDocType, iTransId, action }) => {
 
   useEffect(() => {
     const fetchData = async () => {
-      const response = await getDocSettings({ iDoctype: 2 });
+      const response = await getDocSettings({ iDoctype: 14 });
       if (response?.Status === "Success") {
         const myObject = JSON.parse(response?.ResultData);
-        console.log(myObject);
         setHeaderFields(myObject?.Header);
         const grouped = groupFieldsByTab(myObject?.Header);
         setGroupedFields(grouped);
