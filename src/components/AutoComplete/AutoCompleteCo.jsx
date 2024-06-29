@@ -7,13 +7,22 @@ function AutoCompleteCo({ iTag, iUser, value, inputValue }) {
   const [suggestion, setSuggestion] = useState([]);
   useEffect(() => {
     const fetchData = async () => {
-      const response = await getMasters({
-        iTag,
-        iUser,
-        iType: isF2Pressed,
-        Search: " ",
-      });
-      setSuggestion(response);
+      try {
+        const response = await getMasters({
+          iTag,
+          iUser,
+          iType: isF2Pressed,
+          Search: " ",
+        });
+        if(response){
+          setSuggestion(response);
+        }else{
+          setSuggestion([])
+        }
+     
+      } catch (error) {
+        setSuggestion([]);
+      }
     };
     fetchData();
   }, [isF2Pressed]);

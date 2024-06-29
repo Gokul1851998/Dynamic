@@ -70,6 +70,7 @@ const FormContent = ({ header, receiveData, headerFields }) => {
                   onChange={(e) => handleInputChange(e, field.sFieldName)}
                 />
               ) : field.iDataType === 5 || field.iDataType === 6 ? (
+          
                 <AutoCompleteCo
                   iTag={field.iLinkTag}
                   iUser={localStorage.getItem("userId")}
