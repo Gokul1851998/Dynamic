@@ -9,7 +9,6 @@ import AutoCompleteCo from "../AutoComplete/AutoCompleteCo";
 
 const FormContent = ({ header, receiveData, headerFields }) => {
   const [formData, setFormData] = useState({});
-   console.log(header);
   useEffect(() => {
     if (header) {
       const formatDate = (dateString) => {

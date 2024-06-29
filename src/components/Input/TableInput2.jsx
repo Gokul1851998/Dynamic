@@ -2,7 +2,6 @@ import { TextField } from "@mui/material";
 import React from "react";
 
 export default function TableInput({ type, column, row, value, setValue }) {
-  console.log(value[row][column]);
   return (
     <TextField
       margin="normal"

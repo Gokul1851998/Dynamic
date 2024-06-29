@@ -32,7 +32,6 @@ function Header() {
   React.useEffect(() => {
     const fetchData = async () => {
        const response2 = await getMainSettings()
-       console.log(JSON.parse(response2.ResultData));
       const response = await getMenu({ iUser });
       if (response.Status === "Success") {
         const myObject = JSON.parse(response.ResultData);

@@ -17,7 +17,6 @@ const AutoCompleteProduct = ({ formData, setFormData, column, row, api, iTag }) 
 
   const handleAutocompleteChange = (event, newValue) => {
      if(newValue){
-        console.log(newValue);
         let updatedFormData = [...formData];
         updatedFormData[row][column] = newValue.sName;
         updatedFormData[row].Description = newValue.sCode;
