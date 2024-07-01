@@ -17,6 +17,7 @@ import sang_logo from "../../assets/sangsolution.png";
 import { useNavigate } from "react-router-dom";
 import { Stack } from "@mui/material";
 import { getMainSettings, getMenu } from "../../api/ApiCall";
+import { menuData } from "../../config";
 
 const settings = ["Profile", "Account", "Dashboard", "Logout"];
 
@@ -31,12 +32,7 @@ function Header() {
   const [menuId, setMenuId] = React.useState(0)
   React.useEffect(() => {
     const fetchData = async () => {
-       const response2 = await getMainSettings()
-      const response = await getMenu({ iUser });
-      if (response.Status === "Success") {
-        const myObject = JSON.parse(response.ResultData);
-        setMenu(myObject.Table);
-      }
+        setMenu(menuData);  
     };
     fetchData();
   }, [iUser]);
@@ -76,12 +72,8 @@ function Header() {
     navigate("/");
   };
 
-  const handleTransaction = () => {
-    navigate("/Transaction");
-  };
-
   const handleClickEvent =async(menu)=>{
-    navigate('/summary',{state:menu?.iDoctype})
+    navigate('/summary',{state:menu})
     handleMenuList()
   }
   return (

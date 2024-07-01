@@ -150,7 +150,7 @@ EnhancedTableHead.propTypes = {
 };
 
 function EnhancedTableToolbar(props) {
-  const { numSelected, values, changes } = props;
+  const { numSelected, values, changes, menuName } = props;
 
   return (
     <Toolbar
@@ -165,7 +165,7 @@ function EnhancedTableToolbar(props) {
         id="tableTitle"
         component="div"
       >
-        Purchase
+       {menuName}
       </Typography>
 
       <TextField
@@ -187,7 +187,7 @@ EnhancedTableToolbar.propTypes = {
 export default function PurchaseTable() {
   const iUser = localStorage.getItem("userId");
   const location = useLocation();
-  const iDocType = location.state;
+  const menu = location.state;
   const [order, setOrder] = React.useState("asc");
   const [orderBy, setOrderBy] = React.useState(0);
   const [selected, setSelected] = React.useState([]);
@@ -199,11 +199,11 @@ export default function PurchaseTable() {
   const [sortDir, setSortDir] = React.useState("asc");
   const [open, setOpen] = React.useState(false);
   const [navigate, setNavigate] = React.useState(false);
-
+ 
   const buttonStyle = {
-    textTransform: "none", // Set text transform to none for normal case
-    color: "#FFFFFF", // Set text color
-    backgroundColor: "#7581c6", // Set background color
+    textTransform: "none", 
+    color: "#FFFFFF", 
+    backgroundColor: "#7581c6", 
   };
 
   const handleClose = () => {
@@ -221,7 +221,7 @@ export default function PurchaseTable() {
       SortCol: orderBy,
       SortDir: order,
       iUser,
-      iDocType: iDocType,
+      iDocType: 2,
       Search: searchQuery,
     });
     if (response?.Status === "Success") {
@@ -320,7 +320,7 @@ export default function PurchaseTable() {
         const response = await deleteTransaction({
           iId: ids,
           iUser,
-          iDocType,
+          iDocType:menu?.iDocType,
         });
         if (response?.Status === "Success") {
           Swal.fire({
@@ -424,6 +424,7 @@ export default function PurchaseTable() {
                 numSelected={selected.length}
                 values={searchQuery}
                 changes={handleSearch}
+                menuName={menu?.sName}
               />
               {data.length > 0 && (
                 <TableContainer
@@ -576,7 +577,7 @@ export default function PurchaseTable() {
             </Paper>
           </>
         ) : (
-          <DetailPage iUser={iUser} iTransId={selected[0]} iDocType={iDocType} action={handleEditClose}/>
+          <DetailPage iUser={iUser} iTransId={selected[0]} details={menu} action={handleEditClose}/>
         )}
       </Box>
       <Loader open={open} handleClose={handleClose} />

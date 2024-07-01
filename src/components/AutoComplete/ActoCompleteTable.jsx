@@ -2,10 +2,10 @@ import { Autocomplete, TextField, Typography } from "@mui/material";
 import React, { useEffect, useState } from "react";
 import { getMasters } from "../../api/ApiCall";
 
-function AutoCompleteCo({ iTag, iUser, value, label, inputValue, fieldName }) {
+function AutoCompleteTable({ iTag, iUser, value, label, inputValue, fieldName }) {
   const [isF2Pressed, setIsF2Pressed] = useState(1);
-  const [suggestion, setSuggestion] = useState([]);
-  const [searchTerm, setSearchTerm] = useState("");
+  const [suggestions, setSuggestions] = useState([]);
+  const [search, setSearch] = useState("");
 
   useEffect(() => {
     const fetchData = async () => {
@@ -14,30 +14,27 @@ function AutoCompleteCo({ iTag, iUser, value, label, inputValue, fieldName }) {
           iTag,
           iUser,
           iType: isF2Pressed,
-          Search: searchTerm,
+          Search: search || "",
         });
-        setSuggestion(response || []);
+        setSuggestions(response || []);
       } catch (error) {
-        setSuggestion([]);
+        console.error("Error fetching data:", error);
+        setSuggestions([]);
       }
     };
+
     fetchData();
-  }, [isF2Pressed, searchTerm]);
+  }, [isF2Pressed,iTag, iUser, search]);
 
   const handleAutocompleteChange = (event, newValue) => {
     let updatedFormData = { ...value, [fieldName]: newValue?.sName || "" };
     inputValue(updatedFormData);
   };
 
-  const handleInputChange = (event) => {
-    setSearchTerm(event.target.value);
-  };
-
   return (
     <Autocomplete
       size="small"
-      value={{ sName: value[fieldName] || "" }}
-      options={suggestion.map((data) => ({
+      options={suggestions.map((data) => ({
         sName: data?.sName,
         sCode: data?.sCode,
         iId: data?.iId,
@@ -50,6 +47,13 @@ function AutoCompleteCo({ iTag, iUser, value, label, inputValue, fieldName }) {
             option.sCode.toLowerCase().includes(inputValue.toLowerCase())
         )
       }
+      onInputChange={(event) => {
+        if (event && event.target) {
+          setSearch(event.target.value);
+        }else{
+            setSearch("")
+        }
+      }}
       autoHighlight
       getOptionLabel={(option) => (option && option.sName ? option.sName : "")}
       renderOption={(props, option) => (
@@ -84,8 +88,8 @@ function AutoCompleteCo({ iTag, iUser, value, label, inputValue, fieldName }) {
       )}
       renderInput={(params) => (
         <TextField
-          label={label}
           {...params}
+          label={label}
           inputProps={{
             ...params.inputProps,
             autoComplete: "new-password", // disable autocomplete and autofill
@@ -94,12 +98,24 @@ function AutoCompleteCo({ iTag, iUser, value, label, inputValue, fieldName }) {
                 setIsF2Pressed(isF2Pressed === 1 ? 2 : 1);
               }
             },
-            onChange: handleInputChange, // Update search term on input change
           }}
+          sx={{
+            "& .MuiOutlinedInput-input": {
+              padding: "8px 14px", // Reduce padding to decrease height
+              fontSize: "0.75rem", // Adjust the font size of the input text
+            },
+            "& .MuiInputLabel-outlined": {
+              transform: "translate(14px, 22px) scale(0.85)", // Adjust the label position
+            },
+            "& .MuiInputLabel-outlined.MuiInputLabel-shrink": {
+              transform: "translate(14px, 6px) scale(0.75)",
+            },
+          }}
+          style={{ width: 250 }}
         />
       )}
     />
   );
 }
 
-export default AutoCompleteCo;
+export default AutoCompleteTable;

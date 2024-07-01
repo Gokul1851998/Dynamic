@@ -37,11 +37,11 @@ const groupFieldsByTab = (fields) => {
   }, {});
 };
 
-const DetailPage = ({ iUser, iDocType, iTransId, action }) => {
+const DetailPage = ({ iUser, details, iTransId, action }) => {
   const [activeTab, setActiveTab] = useState(0);
   const [header, setHeader] = useState();
   const [body, setBody] = useState([]);
-  const [headerFields, setHeaderFields] = useState([]);
+  const [bodyFields, setBodyFields] = useState([]);
   const [groupedFields, setGroupedFields] = useState({});
   const [tabs, setTabs] = useState([]);
   const [open, setOpen] = useState(false);
@@ -61,18 +61,18 @@ const DetailPage = ({ iUser, iDocType, iTransId, action }) => {
 
   useEffect(() => {
     const fetchData = async () => {
-      const response = await getDocSettings({ iDoctype: 13 });
+      const response = await getDocSettings({ iDoctype: details?.iDocType });
       if (response?.Status === "Success") {
         const myObject = JSON.parse(response?.ResultData);
-        console.log(myObject,'-----****');
-        setHeaderFields(myObject?.Header);
+        console.log(myObject);
+        setBodyFields(myObject?.Body)
         const grouped = groupFieldsByTab(myObject?.Header);
         setGroupedFields(grouped);
         setTabs(Object.keys(grouped));
       }
     };
     fetchData();
-  }, []);
+  }, [details]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -80,7 +80,7 @@ const DetailPage = ({ iUser, iDocType, iTransId, action }) => {
         handleOpen();
         const response = await getTransactionDetails({
           iUser,
-          iDocType,
+          iDocType:details?.iDocType,
           iTransId,
         });
         if (response?.Status === "Success") {
@@ -94,7 +94,7 @@ const DetailPage = ({ iUser, iDocType, iTransId, action }) => {
       }
     };
     fetchData();
-  }, [iUser, iDocType, iTransId]);
+  }, [iUser, iTransId]);
 
   const receiveDataFromChild = (data) => {
     setChildData(data);
@@ -177,7 +177,7 @@ const DetailPage = ({ iUser, iDocType, iTransId, action }) => {
           )}
         </MDBCardBody>
       </MDBCard>
-      <BodyTable tableData={body} />
+      <BodyTable tableData={body} bodyFields={bodyFields} />
       <Loader open={open} handleClose={handleClose} />
     </>
   );

@@ -1,62 +1,28 @@
 import * as React from "react";
 import PropTypes from "prop-types";
-import { alpha } from "@mui/material/styles";
 import Box from "@mui/material/Box";
 import Table from "@mui/material/Table";
 import TableBody from "@mui/material/TableBody";
 import TableCell from "@mui/material/TableCell";
 import TableContainer from "@mui/material/TableContainer";
 import TableHead from "@mui/material/TableHead";
-import TablePagination from "@mui/material/TablePagination";
 import TableRow from "@mui/material/TableRow";
-import TableSortLabel from "@mui/material/TableSortLabel";
 import Toolbar from "@mui/material/Toolbar";
 import Typography from "@mui/material/Typography";
-import Paper from "@mui/material/Paper";
-import Checkbox from "@mui/material/Checkbox";
 import IconButton from "@mui/material/IconButton";
-import Tooltip from "@mui/material/Tooltip";
-import EditIcon from "@mui/icons-material/Edit";
-import DeleteIcon from "@mui/icons-material/Delete";
-import AddIcon from "@mui/icons-material/Add";
-import PrintIcon from "@mui/icons-material/Print";
-import CloseIcon from "@mui/icons-material/Close";
 import PopupState, { bindTrigger, bindPopover } from "material-ui-popup-state";
-import { visuallyHidden } from "@mui/utils";
-import {
-  deleteTransaction,
-  getMasters,
-  getProductDetails,
-  getTransactionDetails,
-  getTransactionSummary,
-} from "../../api/ApiCall";
-import Loader from "../Loader/Loader";
+import { TextField, Popover, Stack } from "@mui/material";
+import { MDBCard } from "mdb-react-ui-kit";
 import AddCircleIcon from "@mui/icons-material/AddCircle";
 import RemoveCircleIcon from "@mui/icons-material/RemoveCircle";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
-import {
-  Button,
-  ButtonGroup,
-  FormControl,
-  InputLabel,
-  MenuItem,
-  Pagination,
-  Popover,
-  Select,
-  TextField,
-} from "@mui/material";
-import SendIcon from "@mui/icons-material/Send";
-import Stack from "@mui/material/Stack";
 import { useLocation } from "react-router-dom";
-import Swal from "sweetalert2";
-import DetailPage from "../DetailPage/DetailPage";
-import { MDBCard } from "mdb-react-ui-kit";
-import AutoComplete1 from "../AutoComplete/AutoComplete1";
-import TableInput from "../Input/TableInput";
+import Loader from "../Loader/Loader";
 import BatchModal from "./BatchModal";
-import AutoCompleteProduct from "../AutoComplete/AutoCompleteProduct";
 import SerialNoModal from "./SerialNoModal";
 import AddCharges1 from "./AddCharges1";
+import AutoCompleteTable from "../AutoComplete/ActoCompleteTable";
+import TableInput2 from "../Input/TableInput";
 
 function descendingComparator(a, b, orderBy) {
   if (b[orderBy] < a[orderBy]) {
@@ -86,21 +52,7 @@ function stableSort(array, comparator) {
   return stabilizedThis.map((el) => el[0]);
 }
 
-function EnhancedTableHead(props) {
-  const {
-    onSelectAllClick,
-    order,
-    orderBy,
-    numSelected,
-    rowCount,
-    onRequestSort,
-    rows,
-    handleBatchOpen,
-  } = props;
-  const createSortHandler = (property) => (event) => {
-    onRequestSort(event, property);
-  };
-
+function EnhancedTableHead({ rows, handleBatchOpen }) {
   return (
     <TableHead
       style={{
@@ -111,122 +63,61 @@ function EnhancedTableHead(props) {
       }}
     >
       <TableRow>
-        <TableCell
-          sx={{
-            padding: "4px",
-            border: "1px solid #ddd",
-            whiteSpace: "nowrap",
-          }}
-          padding="checkbox"
-        ></TableCell>
-        {rows.map((header, index) => {
-          if (
-            header !== "iTransDtId" &&
-            header !== "EmployeeId" &&
-            header !== "ProjectId"
-          ) {
-            // Exclude "iId", "iAssetType", and "sAltName" from the header
-            return (
-              <>
-                {header === "Add Charge" ? (
-                  <TableCell
-                  onClick={()=>handleBatchOpen(0, 3)}
-                    sx={{ border: "1px solid #ddd", color: "#FFFF" }}
-                    key={index}
-                    align="left" // Set the alignment to left
-                    padding="normal"
-                  >
-                    {`${header}`}
-                  </TableCell>
-                ) : (
-                  <TableCell
-                    sx={{ border: "1px solid #ddd", color: "#FFFF" }}
-                    key={index}
-                    align="left" // Set the alignment to left
-                    padding="normal"
-                  >
-                    {`${header}`}
-                  </TableCell>
-                )}
-              </>
-            );
-          }
-        })}
+        <TableCell sx={{ padding: "4px", border: "1px solid #ddd", whiteSpace: "nowrap" }} padding="checkbox"></TableCell>
+        {rows.map((header, index) => (
+          <TableCell
+            key={index}
+            sx={{ border: "1px solid #ddd", color: "#FFFF" }}
+            align="left"
+            padding="normal"
+            onClick={() => header === "Add Charge" && handleBatchOpen(0, 3)}
+          >
+            {header}
+          </TableCell>
+        ))}
       </TableRow>
     </TableHead>
   );
 }
 
-EnhancedTableHead.propTypes = {
-  numSelected: PropTypes.number.isRequired,
-  onRequestSort: PropTypes.func.isRequired,
-  onSelectAllClick: PropTypes.func.isRequired,
-  order: PropTypes.oneOf(["asc", "desc"]).isRequired,
-  orderBy: PropTypes.string.isRequired,
-  rowCount: PropTypes.number.isRequired,
-};
-
-function EnhancedTableToolbar(props) {
-  const { numSelected, values, changes } = props;
-
+function EnhancedTableToolbar({ values, changes }) {
   return (
-    <Toolbar
-      sx={{
-        pl: { sm: 2 },
-        pr: { xs: 1, sm: 1 },
-      }}
-    >
-      <Typography
-        sx={{ flex: "1 1 100%" }}
-        variant="h6"
-        id="tableTitle"
-        component="div"
-      >
+    <Toolbar sx={{ pl: { sm: 2 }, pr: { xs: 1, sm: 1 } }}>
+      <Typography sx={{ flex: "1 1 100%" }} variant="h6" id="tableTitle" component="div">
         Purchase
       </Typography>
-
-      <TextField
-        id="search"
-        label="Search"
-        variant="outlined"
-        value={values}
-        onChange={changes}
-        size="small"
-      />
+     
     </Toolbar>
   );
 }
 
-EnhancedTableToolbar.propTypes = {
-  numSelected: PropTypes.number.isRequired,
-};
-
-export default function BodyTable({ tableData }) {
+export default function BodyTable({ bodyFields }) {
   const iUser = localStorage.getItem("userId");
   const location = useLocation();
   const iDocType = location.state;
-  const [order, setOrder] = React.useState("asc");
-  const [orderBy, setOrderBy] = React.useState(0);
-  const [selected, setSelected] = React.useState([]);
-  const [page, setPage] = React.useState(0);
-  const [dense, setDense] = React.useState(true);
-  const [searchQuery, setSearchQuery] = React.useState("");
-  const [rowsPerPage, setRowsPerPage] = React.useState(10);
   const [data, setData] = React.useState([]);
-  const [sortDir, setSortDir] = React.useState("asc");
   const [open, setOpen] = React.useState(false);
-  const [navigate, setNavigate] = React.useState(false);
   const [batchModal, setBatchModal] = React.useState(false);
   const [qty, setQty] = React.useState(0);
   const [modal, setModal] = React.useState(0);
   const [row, setRow] = React.useState(0);
   const tableContainerRef = React.useRef(null);
+  const [formData, setFormData] = React.useState({});
 
-  const buttonStyle = {
-    textTransform: "none", // Set text transform to none for normal case
-    color: "#FFFFFF", // Set text color
-    backgroundColor: "#7581c6", // Set background color
+  // Fetch initial data
+  const fetchData = async () => {
+    setOpen(true);
+    const initialData = {};
+    bodyFields.forEach((field) => {
+      initialData[field.sFieldCaption] = "";
+    });
+    setData([initialData]);
+    setOpen(false);
   };
+
+  React.useEffect(() => {
+    fetchData();
+  }, [bodyFields]);
 
   const handleBatchOpen = (value, type) => {
     setModal(type);
@@ -248,515 +139,175 @@ export default function BodyTable({ tableData }) {
     setData(update);
     handleBatchClose();
   };
-  
-  const handleClose = () => {
-    setOpen(false);
-  };
-  const handleOpen = () => {
-    setOpen(true);
-  };
-
-  React.useEffect(() => {
-    const tableContainer = tableContainerRef.current;
-    if (tableContainer) {
-      // Set horizontal scrollbar to the left
-      tableContainer.scrollLeft = 0;
-      // Set vertical scrollbar to the top
-      tableContainer.scrollTop = tableContainer.scrollHeight;
-    }
-  }, [tableData]);
-
-  const fetchData = async () => {
-    handleOpen();
-    if (tableData && tableData.length) {
-      const dataArrage = tableData.map((data) => ({
-        iTransDtId: data?.iTransDtId,
-        Employee: data?.sTag4,
-        EmployeeId: data?.iTag4,
-        Project: data?.sTag3,
-        ProjectId: data?.iTag3,
-        Company: data?.sTag2,
-        Warehouse: data?.sTag1,
-        Item: data?.iProduct,
-        Description: data?.sItemDesc,
-        Account: data?.iAccount,
-        Unit: data?.iUnit,
-        Quantity: data?.fQty,
-        Rate: data?.fRate,
-        Gross: data?.fGross,
-        Batch: data?.sBatchNo,
-        "Serial No": data?.sSerialNo,
-        "Add Charge": null,
-        "Disc%": "",
-        "Total Dis": "",
-        Net: "",
-        Stock: data?.nStockValue,
-        Remark: data?.sRemarks || " ",
-      }));
-      setData(dataArrage);
-    } else {
-      setData([
-        {
-          iTransDtId: "",
-          Employee: "",
-          EmployeeId: 0,
-          Project: "",
-          ProjectId: 0,
-          Company: "",
-          Warehouse: "",
-          Item: "",
-          Description: "",
-          Account: "",
-          Unit: "",
-          Quantity: "",
-          Rate: "",
-          Gross: "",
-          Batch: "",
-          "Serial No": "",
-          "Add Charge": null,
-          "Disc%": "",
-          "Total Dis": "",
-          Net: "",
-          Stock: "",
-          Remark: "",
-        },
-      ]);
-    }
-    handleClose();
-  };
-
-  React.useEffect(() => {
-    fetchData();
-  }, [tableData]);
-
-  const handleRequestSort = (event, property) => {
-    // const isAsc = orderBy === property && order === "asc";
-    setOrder(orderBy ? "desc" : "asc");
-    setOrderBy(property);
-  };
-
-  const handleSelectAllClick = (event) => {
-    if (event.target.checked) {
-      const newSelected = data.map((n) => n.iTransDtId);
-      setSelected(newSelected);
-      return;
-    }
-    setSelected([]);
-  };
-
-  const handleChangePage = (event, newPage) => {
-    setPage(newPage - 1);
-  };
-
-  const handleChangeRowsPerPage = (event) => {
-    setRowsPerPage(parseInt(event.target.value, 10));
-    setPage(0);
-  };
-
-  const handleSearch = (event) => {
-    setSearchQuery(event.target.value);
-  };
-
-  const isSelected = (id) => selected.indexOf(id) !== -1;
-
-  // Avoid a layout jump when reaching the last page with empty rows.
-
-  const filteredRows = data.filter((row) =>
-    Object.values(row).some((value) => {
-      if (typeof value === "string") {
-        return value.toLowerCase().includes(searchQuery.toLowerCase());
-      }
-      if (typeof value === "number") {
-        return value.toString().includes(searchQuery.toLowerCase());
-      }
-      return false; // Ignore other types
-    })
-  );
-
-  const visibleRows = React.useMemo(
-    () =>
-      stableSort(data, getComparator(order, orderBy)).slice(
-        page * rowsPerPage,
-        page * rowsPerPage + rowsPerPage
-      ),
-    [order, orderBy, page, rowsPerPage, data]
-  );
-
-  const handleDelete = async () => {
-    const ids = selected.join();
-    Swal.fire({
-      text: "Are you sure?",
-      showCancelButton: true,
-      confirmButtonColor: "#3085d6",
-      cancelButtonColor: "#d33",
-      confirmButtonText: "Yes",
-    }).then(async (result) => {
-      if (result.value) {
-        const response = await deleteTransaction({
-          iId: ids,
-          iUser,
-          iDocType,
-        });
-        if (response?.Status === "Success") {
-          Swal.fire({
-            title: "Deleted",
-            text: "Your file has been deleted!",
-            icon: "success",
-            showConfirmButton: false,
-            timer: 1500,
-          });
-          setSelected([]);
-        }
-        fetchData();
-      }
-    });
-  };
-
-  const handleNavigate = () => {
-    setNavigate(true);
-  };
-
-  const handleEditClose = () => {
-    setSelected([]);
-    setNavigate(false);
-  };
 
   const handleRow = (type) => {
     if (type === 1) {
+      const initialData = {};
+      bodyFields.forEach((field) => {
+        initialData[field.sFieldCaption] = "";
+      });
       setData([
         ...data,
-        {
-          iTransDtId: "",
-          Employee: "",
-          EmployeeId: 0,
-          Project: "",
-          ProjectId: 0,
-          Company: "",
-          Warehouse: "",
-          Item: "",
-          Description: "",
-          Account: "",
-          Unit: "",
-          Quantity: "",
-          Rate: "",
-          Gross: "",
-          Batch: "",
-          "Serial No": "",
-          "Add Charge": null,
-          "Disc%": "",
-          "Total Dis": "",
-          Net: "",
-          Stock: "",
-          Remark: "",
-        },
+        initialData,
       ]);
     } else {
-      setSelected([]);
       setData(data.slice(0, -1));
     }
   };
+
+  const handleInputChange = (event, fieldName) => {
+    const value = event.target.value;
+    setFormData((prevData) => ({
+      ...prevData,
+      [fieldName]: value,
+    }));
+  };
+
   return (
     <>
-      <>
-        <MDBCard
-          className="text-center mt-2"
-          style={{ boxShadow: "0 4px 8px rgba(0, 0, 0, 0.3)" }}
-        >
-          {/* <EnhancedTableToolbar
-            numSelected={selected.length}
-            values={searchQuery}
-            changes={handleSearch}
-          /> */}
-          {data.length > 0 && (
-            <TableContainer
-              ref={tableContainerRef}
-              style={{
-                display: "block",
-                maxHeight: "calc(100vh - 400px)",
-                overflowY: "auto",
-                scrollbarWidth: "thin",
-                borderRadius: 2,
-                scrollbarColor: "#888 #f5f5f5",
-                scrollbarTrackColor: "#f5f5f5",
-              }}
-            >
-              <Table
-                sx={{ minWidth: 750 }}
-                aria-labelledby="tableTitle"
-                size={dense ? "small" : "medium"}
-              >
-                <EnhancedTableHead
-                  numSelected={Object.keys(selected).length}
-                  order={order}
-                  orderBy={orderBy}
-                  onSelectAllClick={handleSelectAllClick}
-                  onRequestSort={handleRequestSort}
-                  rowCount={data.length}
-                  rows={Object.keys(data[0])}
-                  handleBatchOpen={handleBatchOpen}
-                />
+      <MDBCard className="text-center mt-2" style={{ boxShadow: "0 4px 8px rgba(0, 0, 0, 0.3)" }}>
+      
+        {data.length > 0 && (
+          <TableContainer
+            ref={tableContainerRef}
+            style={{
+              display: "block",
+              maxHeight: "calc(100vh - 400px)",
+              overflowY: "auto",
+              scrollbarWidth: "thin",
+              borderRadius: 2,
+              scrollbarColor: "#888 #f5f5f5",
+              scrollbarTrackColor: "#f5f5f5",
+            }}
+          >
+            <Table sx={{ minWidth: 750 }} aria-labelledby="tableTitle" size="small">
+              <EnhancedTableHead rows={Object.keys(data[0])} handleBatchOpen={handleBatchOpen} />
 
-                <TableBody>
-                  {visibleRows.map((row, indexNum) => {
-                    const isItemSelected = isSelected(row.iTransDtId);
-                    const labelId = `enhanced-table-checkbox-${indexNum}`;
+              <TableBody>
+                {data.map((row, indexNum) => {
+                  const labelId = `enhanced-table-checkbox-${indexNum}`;
 
-                    const handleRowDoubleClick = async (event, index, iId) => {
-                      handleOpen();
-                      setNavigate(true);
-                      setSelected([iId]);
-                      handleClose();
-                    };
-
-                    return (
-                      <TableRow
-                        hover
-                        className={`table-row `}
-                        role="checkbox"
-                        aria-checked={isItemSelected}
-                        tabIndex={-1}
-                        key={row.iTransDtId}
-                        selected={isItemSelected}
-                        sx={{ cursor: "pointer" }}
-                      >
-                        <TableCell padding="checkbox">
-                          <PopupState
-                            variant="popover"
-                            popupId="demo-popup-popover"
-                          >
-                            {(popupState) => (
-                              <div>
-                                <IconButton
-                                  aria-label="options"
-                                  {...bindTrigger(popupState)}
-                                  sx={{ padding: 0, fontSize: "1.2rem" }}
-                                >
-                                  <MoreVertIcon sx={{ fontSize: "1.2rem" }} />
-                                </IconButton>
-                                <Popover
-                                  {...bindPopover(popupState)}
-                                  anchorOrigin={{
-                                    vertical: "bottom",
-                                    horizontal: "center",
-                                  }}
-                                  transformOrigin={{
-                                    vertical: "top",
-                                    horizontal: "center",
-                                  }}
-                                >
-                                  <Stack direction="row">
+                  return (
+                    <TableRow
+                      hover
+                      className={`table-row `}
+                      role="checkbox"
+                      tabIndex={-1}
+                      key={row.iTransDtId}
+                      sx={{ cursor: "pointer" }}
+                    >
+                      <TableCell padding="checkbox">
+                        <PopupState variant="popover" popupId="demo-popup-popover">
+                          {(popupState) => (
+                            <div>
+                              <IconButton
+                                aria-label="options"
+                                {...bindTrigger(popupState)}
+                                sx={{ padding: 0, fontSize: "1.2rem" }}
+                              >
+                                <MoreVertIcon sx={{ fontSize: "1.2rem" }} />
+                              </IconButton>
+                              <Popover
+                                {...bindPopover(popupState)}
+                                anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+                                transformOrigin={{ vertical: "top", horizontal: "center" }}
+                              >
+                                <Stack direction="row">
+                                  <IconButton
+                                    onClick={() => {
+                                      handleRow(1);
+                                      popupState.close();
+                                    }}
+                                    aria-label="add"
+                                    color="#8c99e0"
+                                    sx={{ fontSize: "1.2rem", color: "#8c99e0" }}
+                                  >
+                                    <AddCircleIcon sx={{ fontSize: "1.2rem" }} />
+                                  </IconButton>
+                                  {data?.length > 1 && (
                                     <IconButton
                                       onClick={() => {
-                                        handleRow(1);
-                                        popupState.close(); // Close the popover
+                                        handleRow(0);
+                                        popupState.close();
                                       }}
-                                      aria-label="add"
-                                      color="#8c99e0"
-                                      sx={{
-                                        fontSize: "1.2rem",
-                                        color: "#8c99e0",
-                                      }}
+                                      aria-label="remove"
+                                      sx={{ fontSize: "1.2rem", color: "#8c99e0" }}
                                     >
-                                      <AddCircleIcon
-                                        sx={{ fontSize: "1.2rem" }}
-                                      />
+                                      <RemoveCircleIcon sx={{ fontSize: "1.2rem" }} />
                                     </IconButton>
-                                    {data?.length > 1 ? (
-                                      <IconButton
-                                        onClick={() => {
-                                          handleRow(0);
-                                          popupState.close(); // Close the popover
-                                        }}
-                                        aria-label="remove"
-                                        sx={{
-                                          fontSize: "1.2rem",
-                                          color: "#8c99e0",
-                                        }}
-                                      >
-                                        <RemoveCircleIcon
-                                          sx={{ fontSize: "1.2rem" }}
-                                        />
-                                      </IconButton>
-                                    ) : null}
-                                  </Stack>
-                                </Popover>
-                              </div>
-                            )}
-                          </PopupState>
-                        </TableCell>
-                        {Object.keys(data[0]).map((column, index) => {
-                          if (
-                            column !== "iTransDtId" &&
-                            column !== "EmployeeId" &&
-                            column !== "ProjectId"
-                          ) {
-                            return (
-                              <>
-                                <TableCell
-                                  sx={{
-                                    padding: 0,
-                                    border: "1px solid #ddd",
-                                    whiteSpace: "nowrap",
-                                  }}
-                                  key={index + labelId}
-                                  component="th"
-                                  id={labelId}
-                                  scope="row"
-                                  padding="0px"
-                                  align="left"
-                                >
-                                  {column === "Employee" ? (
-                                    <AutoComplete1
-                                      formData={data}
-                                      setFormData={setData}
-                                      column={column}
-                                      row={indexNum}
-                                      api={getMasters}
-                                      iTag={6}
-                                    />
-                                  ) : column === "Project" ? (
-                                    <AutoComplete1
-                                      formData={data}
-                                      setFormData={setData}
-                                      column={column}
-                                      row={indexNum}
-                                      api={getMasters}
-                                      iTag={5}
-                                    />
-                                  ) : column === "Company" ? (
-                                    <AutoComplete1
-                                      formData={data}
-                                      setFormData={setData}
-                                      column={column}
-                                      row={indexNum}
-                                      api={getMasters}
-                                      iTag={4}
-                                    />
-                                  ) : column === "Warehouse" ? (
-                                    <AutoComplete1
-                                      formData={data}
-                                      setFormData={setData}
-                                      column={column}
-                                      row={indexNum}
-                                      api={getMasters}
-                                      iTag={1}
-                                    />
-                                  ) : column === "Item" ? (
-                                    <AutoCompleteProduct
-                                      formData={data}
-                                      setFormData={setData}
-                                      column={column}
-                                      row={indexNum}
-                                      api={getMasters}
-                                      iTag={2}
-                                    />
-                                  ) : column === "Description" ? (
-                                    <TableInput
-                                      type="text"
-                                      value={data}
-                                      setValue={setData}
-                                      column={column}
-                                      row={indexNum}
-                                    />
-                                  ) : column === "Account" ? (
-                                    <AutoComplete1
-                                      formData={data}
-                                      setFormData={setData}
-                                      column={column}
-                                      row={indexNum}
-                                      api={getMasters}
-                                      iTag={1}
-                                    />
-                                  ) : column === "Quantity" ? (
-                                    <TableInput
-                                      type="number"
-                                      value={data}
-                                      setValue={setData}
-                                      column={column}
-                                      row={indexNum}
-                                    />
-                                  ) : column === "Rate" ? (
-                                    <TableInput
-                                      type="number"
-                                      value={data}
-                                      setValue={setData}
-                                      column={column}
-                                      row={indexNum}
-                                    />
-                                  ) : column === "Batch" ? (
-                                    <div
-                                      onClick={() =>
-                                        handleBatchOpen(indexNum, 1)
-                                      }
-                                    >
-                                      <TableInput
-                                        type="number"
-                                        value={data}
-                                        setValue={setData}
-                                        column={column}
-                                        row={indexNum}
-                                      />
-                                    </div>
-                                  ) : column === "Serial No" ? (
-                                    <div
-                                      onClick={() =>
-                                        handleBatchOpen(indexNum, 2)
-                                      }
-                                    >
-                                      <TableInput
-                                        type="text"
-                                        value={data}
-                                        setValue={setData}
-                                        column={column}
-                                        row={indexNum}
-                                      />
-                                    </div>
-                                  ) : (
-                                    <TableInput
-                                      type="text"
-                                      value={data}
-                                      setValue={setData}
-                                      column={column}
-                                      row={indexNum}
-                                    />
                                   )}
-                                </TableCell>
-                              </>
-                            );
-                          }
-                        })}
-                      </TableRow>
-                    );
-                  })}
-                </TableBody>
-              </Table>
-            </TableContainer>
-          )}
-        </MDBCard>
-      </>
+                                </Stack>
+                              </Popover>
+                            </div>
+                          )}
+                        </PopupState>
+                      </TableCell>
+                      {bodyFields
+                        .filter((field) => field.bVisible && !["iTransDtId"].includes(field.sFieldName))
+                        .map((field, index) => (
+                          <TableCell
+                          sx={{
+                            padding: 0,
+                            border: "1px solid #ddd",
+                            whiteSpace: "nowrap",
+                          }}
+                          key={index + labelId}
+                          component="th"
+                          id={labelId}
+                          scope="row"
+                          padding="0px"
+                          align="left"
+                          >
+                            {field.iDataType === 3 ? (
+                              <TextField
+                                id={`form3Example${index + 1}`}
+                                type="date"
+                                readOnly={field.bReadOnly}
+                                size="small"
+                                value={formData[field.sFieldName] || ""}
+                                onChange={(e) => handleInputChange(e, field.sFieldName)}
+                              />
+                            ) : field.iDataType === 5 || field.iDataType === 6 ? (
+                              <AutoCompleteTable
+                                iTag={field.iLinkTag}
+                                iUser={localStorage.getItem("userId")}
+                                fieldName={field.sFieldName}
+                                value={formData}
+                                inputValue={setFormData}
+                              />
+                            ) : (
+                              <TableInput2
+                                type={
+                                  field.iDataType === 1 || field.iDataType === 4 || field.iDataType === 8
+                                    ? "number"
+                                    : "text"
+                                }
+                                value={data}
+                                setValue={setData}
+                                column={field.sFieldName}
+                                row={indexNum}
+                              />
+                            )}
+                          </TableCell>
+                        ))}
+                    </TableRow>
+                  );
+                })}
+              </TableBody>
+            </Table>
+          </TableContainer>
+        )}
+      </MDBCard>
+
       {modal === 1 ? (
-        <BatchModal
-          isOpen={batchModal}
-          handleCloseModal={handleBatchClose}
-          qty={qty}
-        />
+        <BatchModal isOpen={batchModal} handleCloseModal={handleBatchClose} qty={qty} />
       ) : modal === 2 ? (
-        <SerialNoModal
-          isOpen={batchModal}
-          handleCloseModal={handleBatchClose}
-          qty={qty}
-          handleSubmit={handleBatchSubmit}
-        />
-      ): modal === 3 ? (
-        <AddCharges1
-          isOpen={batchModal}
-          handleCloseModal={handleBatchClose}
-          qty={qty}
-          handleSubmit={handleBatchSubmit}
-        />
+        <SerialNoModal isOpen={batchModal} handleCloseModal={handleBatchClose} qty={qty} handleSubmit={handleBatchSubmit} />
+      ) : modal === 3 ? (
+        <AddCharges1 isOpen={batchModal} handleCloseModal={handleBatchClose} qty={qty} handleSubmit={handleBatchSubmit} />
       ) : null}
 
-      <Loader open={open} handleClose={handleClose} />
+      <Loader open={open} handleClose={setOpen} />
     </>
   );
 }
