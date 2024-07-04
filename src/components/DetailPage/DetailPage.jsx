@@ -10,6 +10,7 @@ import {
 import { Button, Stack } from "@mui/material";
 import {
   getDocSettings,
+  getMainSettings,
   getTransactionDetails,
 } from "../../api/ApiCall";
 import FormContent from "./FormContent";
@@ -64,11 +65,15 @@ const DetailPage = ({ iUser, details, iTransId, action }) => {
       const response = await getDocSettings({ iDoctype: details?.iDocType });
       if (response?.Status === "Success") {
         const myObject = JSON.parse(response?.ResultData);
-        console.log(myObject);
         setBodyFields(myObject?.Body)
         const grouped = groupFieldsByTab(myObject?.Header);
         setGroupedFields(grouped);
         setTabs(Object.keys(grouped));
+      }
+      const response2 = await getMainSettings();
+      if(response2?.Status === "Success"){
+        const myObject = JSON.parse(response2?.ResultData)
+        console.log(myObject);
       }
     };
     fetchData();

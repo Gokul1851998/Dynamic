@@ -233,7 +233,8 @@ export default function PurchaseTable() {
 
   React.useEffect(() => {
     fetchData();
-  }, [searchQuery,page, rowsPerPage, order, orderBy]);
+    setNavigate(false)
+  }, [searchQuery,page, rowsPerPage, order, orderBy, menu]);
 
   const handleRequestSort = (event, property) => {
     // const isAsc = orderBy === property && order === "asc";

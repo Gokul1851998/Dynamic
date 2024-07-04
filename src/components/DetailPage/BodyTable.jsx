@@ -23,34 +23,7 @@ import SerialNoModal from "./SerialNoModal";
 import AddCharges1 from "./AddCharges1";
 import AutoCompleteTable from "../AutoComplete/ActoCompleteTable";
 import TableInput2 from "../Input/TableInput";
-
-function descendingComparator(a, b, orderBy) {
-  if (b[orderBy] < a[orderBy]) {
-    return -1;
-  }
-  if (b[orderBy] > a[orderBy]) {
-    return 1;
-  }
-  return 0;
-}
-
-function getComparator(order, orderBy) {
-  return order === "desc"
-    ? (a, b) => descendingComparator(a, b, orderBy)
-    : (a, b) => -descendingComparator(a, b, orderBy);
-}
-
-function stableSort(array, comparator) {
-  const stabilizedThis = array.map((el, index) => [el, index]);
-  stabilizedThis.sort((a, b) => {
-    const order = comparator(a[0], b[0]);
-    if (order !== 0) {
-      return order;
-    }
-    return a[1] - b[1];
-  });
-  return stabilizedThis.map((el) => el[0]);
-}
+import DynamicInputs from "./DynamicInputs";
 
 function EnhancedTableHead({ rows, handleBatchOpen }) {
   return (
@@ -63,7 +36,14 @@ function EnhancedTableHead({ rows, handleBatchOpen }) {
       }}
     >
       <TableRow>
-        <TableCell sx={{ padding: "4px", border: "1px solid #ddd", whiteSpace: "nowrap" }} padding="checkbox"></TableCell>
+        <TableCell
+          sx={{
+            padding: "4px",
+            border: "1px solid #ddd",
+            whiteSpace: "nowrap",
+          }}
+          padding="checkbox"
+        ></TableCell>
         {rows.map((header, index) => (
           <TableCell
             key={index}
@@ -83,10 +63,14 @@ function EnhancedTableHead({ rows, handleBatchOpen }) {
 function EnhancedTableToolbar({ values, changes }) {
   return (
     <Toolbar sx={{ pl: { sm: 2 }, pr: { xs: 1, sm: 1 } }}>
-      <Typography sx={{ flex: "1 1 100%" }} variant="h6" id="tableTitle" component="div">
+      <Typography
+        sx={{ flex: "1 1 100%" }}
+        variant="h6"
+        id="tableTitle"
+        component="div"
+      >
         Purchase
       </Typography>
-     
     </Toolbar>
   );
 }
@@ -119,6 +103,16 @@ export default function BodyTable({ bodyFields }) {
     fetchData();
   }, [bodyFields]);
 
+  React.useEffect(() => {
+    // Remove focus from any input fields on component mount
+    if (tableContainerRef.current) {
+      const inputs = tableContainerRef.current.querySelectorAll("input");
+      inputs.forEach((input) => {
+        input.blur();
+      });
+    }
+  }, []);
+
   const handleBatchOpen = (value, type) => {
     setModal(type);
     setQty(data[value].Quantity);
@@ -146,10 +140,7 @@ export default function BodyTable({ bodyFields }) {
       bodyFields.forEach((field) => {
         initialData[field.sFieldCaption] = "";
       });
-      setData([
-        ...data,
-        initialData,
-      ]);
+      setData([...data, initialData]);
     } else {
       setData(data.slice(0, -1));
     }
@@ -165,8 +156,10 @@ export default function BodyTable({ bodyFields }) {
 
   return (
     <>
-      <MDBCard className="text-center mt-2" style={{ boxShadow: "0 4px 8px rgba(0, 0, 0, 0.3)" }}>
-      
+      <MDBCard
+        className="text-center mt-2"
+        style={{ boxShadow: "0 4px 8px rgba(0, 0, 0, 0.3)" }}
+      >
         {data.length > 0 && (
           <TableContainer
             ref={tableContainerRef}
@@ -180,8 +173,15 @@ export default function BodyTable({ bodyFields }) {
               scrollbarTrackColor: "#f5f5f5",
             }}
           >
-            <Table sx={{ minWidth: 750 }} aria-labelledby="tableTitle" size="small">
-              <EnhancedTableHead rows={Object.keys(data[0])} handleBatchOpen={handleBatchOpen} />
+            <Table
+              sx={{ minWidth: 750 }}
+              aria-labelledby="tableTitle"
+              size="small"
+            >
+              <EnhancedTableHead
+                rows={Object.keys(data[0])}
+                handleBatchOpen={handleBatchOpen}
+              />
 
               <TableBody>
                 {data.map((row, indexNum) => {
@@ -197,7 +197,10 @@ export default function BodyTable({ bodyFields }) {
                       sx={{ cursor: "pointer" }}
                     >
                       <TableCell padding="checkbox">
-                        <PopupState variant="popover" popupId="demo-popup-popover">
+                        <PopupState
+                          variant="popover"
+                          popupId="demo-popup-popover"
+                        >
                           {(popupState) => (
                             <div>
                               <IconButton
@@ -209,8 +212,14 @@ export default function BodyTable({ bodyFields }) {
                               </IconButton>
                               <Popover
                                 {...bindPopover(popupState)}
-                                anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
-                                transformOrigin={{ vertical: "top", horizontal: "center" }}
+                                anchorOrigin={{
+                                  vertical: "bottom",
+                                  horizontal: "center",
+                                }}
+                                transformOrigin={{
+                                  vertical: "top",
+                                  horizontal: "center",
+                                }}
                               >
                                 <Stack direction="row">
                                   <IconButton
@@ -220,9 +229,14 @@ export default function BodyTable({ bodyFields }) {
                                     }}
                                     aria-label="add"
                                     color="#8c99e0"
-                                    sx={{ fontSize: "1.2rem", color: "#8c99e0" }}
+                                    sx={{
+                                      fontSize: "1.2rem",
+                                      color: "#8c99e0",
+                                    }}
                                   >
-                                    <AddCircleIcon sx={{ fontSize: "1.2rem" }} />
+                                    <AddCircleIcon
+                                      sx={{ fontSize: "1.2rem" }}
+                                    />
                                   </IconButton>
                                   {data?.length > 1 && (
                                     <IconButton
@@ -231,9 +245,14 @@ export default function BodyTable({ bodyFields }) {
                                         popupState.close();
                                       }}
                                       aria-label="remove"
-                                      sx={{ fontSize: "1.2rem", color: "#8c99e0" }}
+                                      sx={{
+                                        fontSize: "1.2rem",
+                                        color: "#8c99e0",
+                                      }}
                                     >
-                                      <RemoveCircleIcon sx={{ fontSize: "1.2rem" }} />
+                                      <RemoveCircleIcon
+                                        sx={{ fontSize: "1.2rem" }}
+                                      />
                                     </IconButton>
                                   )}
                                 </Stack>
@@ -243,52 +262,23 @@ export default function BodyTable({ bodyFields }) {
                         </PopupState>
                       </TableCell>
                       {bodyFields
-                        .filter((field) => field.bVisible && !["iTransDtId"].includes(field.sFieldName))
+                        .filter(
+                          (field) =>
+                            field.bVisible &&
+                            !["iTransDtId"].includes(field.sFieldName)
+                        )
                         .map((field, index) => (
-                          <TableCell
-                          sx={{
-                            padding: 0,
-                            border: "1px solid #ddd",
-                            whiteSpace: "nowrap",
-                          }}
-                          key={index + labelId}
-                          component="th"
-                          id={labelId}
-                          scope="row"
-                          padding="0px"
-                          align="left"
-                          >
-                            {field.iDataType === 3 ? (
-                              <TextField
-                                id={`form3Example${index + 1}`}
-                                type="date"
-                                readOnly={field.bReadOnly}
-                                size="small"
-                                value={formData[field.sFieldName] || ""}
-                                onChange={(e) => handleInputChange(e, field.sFieldName)}
-                              />
-                            ) : field.iDataType === 5 || field.iDataType === 6 ? (
-                              <AutoCompleteTable
-                                iTag={field.iLinkTag}
-                                iUser={localStorage.getItem("userId")}
-                                fieldName={field.sFieldName}
-                                value={formData}
-                                inputValue={setFormData}
-                              />
-                            ) : (
-                              <TableInput2
-                                type={
-                                  field.iDataType === 1 || field.iDataType === 4 || field.iDataType === 8
-                                    ? "number"
-                                    : "text"
-                                }
-                                value={data}
-                                setValue={setData}
-                                column={field.sFieldName}
-                                row={indexNum}
-                              />
-                            )}
-                          </TableCell>
+                          <DynamicInputs
+                            index={index}
+                            labelId={labelId}
+                            field={field}
+                            formData={formData}
+                            handleInputChange={handleInputChange}
+                            setFormData={setFormData}
+                            data={data}
+                            indexNum={indexNum}
+                            setData={setData}
+                          />
                         ))}
                     </TableRow>
                   );
@@ -300,11 +290,25 @@ export default function BodyTable({ bodyFields }) {
       </MDBCard>
 
       {modal === 1 ? (
-        <BatchModal isOpen={batchModal} handleCloseModal={handleBatchClose} qty={qty} />
+        <BatchModal
+          isOpen={batchModal}
+          handleCloseModal={handleBatchClose}
+          qty={qty}
+        />
       ) : modal === 2 ? (
-        <SerialNoModal isOpen={batchModal} handleCloseModal={handleBatchClose} qty={qty} handleSubmit={handleBatchSubmit} />
+        <SerialNoModal
+          isOpen={batchModal}
+          handleCloseModal={handleBatchClose}
+          qty={qty}
+          handleSubmit={handleBatchSubmit}
+        />
       ) : modal === 3 ? (
-        <AddCharges1 isOpen={batchModal} handleCloseModal={handleBatchClose} qty={qty} handleSubmit={handleBatchSubmit} />
+        <AddCharges1
+          isOpen={batchModal}
+          handleCloseModal={handleBatchClose}
+          qty={qty}
+          handleSubmit={handleBatchSubmit}
+        />
       ) : null}
 
       <Loader open={open} handleClose={setOpen} />
