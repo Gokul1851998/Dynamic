@@ -38,6 +38,7 @@ export default function DynamicInputs({
           value={formData[field.sFieldName] || ""}
           onChange={(e) => handleInputChange(e, field.sFieldName)}
           fullWidth
+          autoComplete="off"
           onClick={(e) => e.stopPropagation()}
         />
       ) : field.iDataType === 5 || field.iDataType === 6 ? (
@@ -50,22 +51,23 @@ export default function DynamicInputs({
           fullWidth
         />
       ) : (
-        
-       
         <TextField
-        id={`form3Example${index + 1}`}
-        type={
-            field.iDataType === 1 || field.iDataType === 4 || field.iDataType === 8
+          id={`form3Example${index + 1}`}
+          type={
+            field.iDataType === 1 ||
+            field.iDataType === 4 ||
+            field.iDataType === 8
               ? "number"
               : "text"
           }
-        readOnly={field.bReadOnly}
-        size="small"
-        value={formData[field.sFieldName] || ""}
-        onChange={(e) => handleInputChange(e, field.sFieldName)}
-        fullWidth
-        onClick={(e) => e.stopPropagation()}
-        sx={{
+          readOnly={field.bReadOnly}
+          size="small"
+          value={formData[field.sFieldName] || ""}
+          onChange={(e) => handleInputChange(e, field.sFieldName)}
+          fullWidth
+          onClick={(e) => e.stopPropagation()}
+          autoComplete="off"
+          sx={{
             padding: 0,
             margin: 0,
             width: 250, // Adjust the width as needed
@@ -88,7 +90,7 @@ export default function DynamicInputs({
               borderColor: "currentColor", // Optional: Keeps the border color on hover
             },
           }}
-      />
+        />
       )}
     </TableCell>
   );

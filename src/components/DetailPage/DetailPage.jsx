@@ -43,6 +43,7 @@ const DetailPage = ({ iUser, details, iTransId, action }) => {
   const [header, setHeader] = useState();
   const [body, setBody] = useState([]);
   const [bodyFields, setBodyFields] = useState([]);
+  const [bodySettings, setBodySettings] = useState({})
   const [groupedFields, setGroupedFields] = useState({});
   const [tabs, setTabs] = useState([]);
   const [open, setOpen] = useState(false);
@@ -73,7 +74,7 @@ const DetailPage = ({ iUser, details, iTransId, action }) => {
       const response2 = await getMainSettings();
       if(response2?.Status === "Success"){
         const myObject = JSON.parse(response2?.ResultData)
-        console.log(myObject);
+        setBodySettings(myObject.Batch[0]);
       }
     };
     fetchData();
@@ -173,7 +174,7 @@ const DetailPage = ({ iUser, details, iTransId, action }) => {
           </MDBTabs>
         </MDBCardHeader>
         <MDBCardBody>
-          {tabs.length > 0 && (
+          {tabs.length > 0  && (
             <FormContent
               header={header}
               receiveData={receiveDataFromChild}
@@ -182,7 +183,7 @@ const DetailPage = ({ iUser, details, iTransId, action }) => {
           )}
         </MDBCardBody>
       </MDBCard>
-      <BodyTable tableData={body} bodyFields={bodyFields} />
+      <BodyTable tableData={body} bodyFields={bodyFields} bodySettings={bodySettings} />
       <Loader open={open} handleClose={handleClose} />
     </>
   );

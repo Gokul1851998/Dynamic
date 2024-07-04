@@ -75,7 +75,7 @@ function EnhancedTableToolbar({ values, changes }) {
   );
 }
 
-export default function BodyTable({ bodyFields }) {
+export default function BodyTable({ bodyFields, bodySettings }) {
   const iUser = localStorage.getItem("userId");
   const location = useLocation();
   const iDocType = location.state;
@@ -91,11 +91,32 @@ export default function BodyTable({ bodyFields }) {
   // Fetch initial data
   const fetchData = async () => {
     setOpen(true);
-    const initialData = {};
+  
+    // Initialize initialData
+    let initialData = {};
     bodyFields.forEach((field) => {
       initialData[field.sFieldCaption] = "";
     });
-    setData([initialData]);
+  
+    // Create a new object to hold the modified initial data
+    let modifiedData = {};
+    const keys = Object.keys(initialData);
+    for (let i = 0; i < keys.length; i++) {
+      const key = keys[i];
+      modifiedData[key] = initialData[key];
+      
+      // Insert the "Batch" field after "Gross" if the condition is true
+      if (bodySettings?.bEnableBatch && key === "Gross") {
+        modifiedData["Batch"] = "";
+      }
+    }
+    
+    if(bodySettings?.bEnableBatch){
+      setData([modifiedData]);
+    } else {
+      setData([initialData]);
+    }
+    
     setOpen(false);
   };
 
@@ -145,7 +166,7 @@ export default function BodyTable({ bodyFields }) {
       setData(data.slice(0, -1));
     }
   };
-
+  console.log(bodyFields);
   const handleInputChange = (event, fieldName) => {
     const value = event.target.value;
     setFormData((prevData) => ({
