@@ -2,7 +2,16 @@ import { Autocomplete, TextField, Typography } from "@mui/material";
 import React, { useEffect, useState } from "react";
 import { getMasters } from "../../api/ApiCall";
 
-function AutoCompleteTable({ iTag, iUser, value, label, inputValue, fieldName, row }) {
+function AutoCompleteTable({
+  iTag,
+  iUser,
+  value,
+  label,
+  inputValue,
+  fieldName,
+  row,
+  fieldCaption,
+}) {
   const [isF2Pressed, setIsF2Pressed] = useState(1);
   const [suggestions, setSuggestions] = useState([]);
   const [search, setSearch] = useState("");
@@ -26,9 +35,14 @@ function AutoCompleteTable({ iTag, iUser, value, label, inputValue, fieldName, r
     fetchData();
   }, [isF2Pressed, iTag, iUser, search]);
 
-  const handleAutocompleteChange = (event, newValue) => { 
+  const handleAutocompleteChange = (event, newValue) => {
     let updatedFormData = [...value];
-    updatedFormData[row][fieldName] = newValue.sName;
+    updatedFormData[row][fieldName] = newValue?.iId || 0;
+    updatedFormData[row][fieldCaption] = newValue?.sName || "";
+    if (iTag === 2) {
+      updatedFormData[row].bBatch = newValue?.bBatch || false;
+      updatedFormData[row].bSerial = newValue?.bSerial || false;
+    }
     inputValue(updatedFormData);
   };
 
@@ -39,8 +53,10 @@ function AutoCompleteTable({ iTag, iUser, value, label, inputValue, fieldName, r
         sName: data?.sName,
         sCode: data?.sCode,
         iId: data?.iId,
+        bBatch: data?.bBatch,
+        bSerial: data?.bSerial,
       }))}
-      value={{ sName: value[row][fieldName] || "" }}
+      value={{ sName: value[row][fieldCaption] || "" }}
       onChange={handleAutocompleteChange}
       filterOptions={(options, { inputValue }) =>
         options.filter(
@@ -121,10 +137,3 @@ function AutoCompleteTable({ iTag, iUser, value, label, inputValue, fieldName, r
 }
 
 export default AutoCompleteTable;
-
-
-
-
-
-
-

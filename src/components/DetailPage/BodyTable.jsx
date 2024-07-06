@@ -26,7 +26,7 @@ import TableInput2 from "../Input/TableInput";
 import DynamicInputs from "./DynamicInputs";
 import ErrorMessage from "../ErrorMessage/ErrorMessage";
 
-function EnhancedTableHead({ rows, handleBatchOpen }) {
+function EnhancedTableHead({ handleBatchOpen, bodyFields, batchEnable }) {
   return (
     <TableHead
       style={{
@@ -45,16 +45,29 @@ function EnhancedTableHead({ rows, handleBatchOpen }) {
           }}
           padding="checkbox"
         ></TableCell>
-        {rows.map((header, index) => (
-          <TableCell
-            key={index}
-            sx={{ border: "1px solid #ddd", color: "#FFFF" }}
-            align="left"
-            padding="normal"
-            onClick={() => header === "Add Charge" && handleBatchOpen(0, 3)}
-          >
-            {header}
-          </TableCell>
+        {bodyFields.map((header, index) => (
+          <>
+            {header.iDataType === 10 ? (
+              <TableCell
+                key={index}
+                sx={{ border: "1px solid #ddd", color: "#FFFF" }}
+                align="left"
+                padding="normal"
+                hidden={!batchEnable}
+              >
+                {header.sFieldCaption}
+              </TableCell>
+            ) : (
+              <TableCell
+                key={index}
+                sx={{ border: "1px solid #ddd", color: "#FFFF" }}
+                align="left"
+                padding="normal"
+              >
+                {header.sFieldCaption}
+              </TableCell>
+            )}
+          </>
         ))}
       </TableRow>
     </TableHead>
@@ -65,7 +78,6 @@ export default function BodyTable({ bodyFields, bodySettings }) {
   const iUser = localStorage.getItem("userId");
   const location = useLocation();
   const iDocType = location.state;
-  const [data, setData] = React.useState([]);
   const [open, setOpen] = React.useState(false);
   const [batchModal, setBatchModal] = React.useState(false);
   const [qty, setQty] = React.useState(0);
@@ -73,16 +85,18 @@ export default function BodyTable({ bodyFields, bodySettings }) {
   const [row, setRow] = React.useState(0);
   const tableContainerRef = React.useRef(null);
   const [formData, setFormData] = React.useState([]);
-  const [warning, setWarning] = React.useState(false)
-  const [message, setMessage] = React.useState("")
+  const [warning, setWarning] = React.useState(false);
+  const [message, setMessage] = React.useState("");
+  const [batchData, setBatchData] = React.useState([]);
+  const [serialData, setSerialData] = React.useState([])
 
-  const handleCloseAlert = ()=>{
-    setWarning(false)
-  }
+  const handleCloseAlert = () => {
+    setWarning(false);
+  };
 
-  const handleOpenAlert = ()=>{
-    setWarning(true)
-  }
+  const handleOpenAlert = () => {
+    setWarning(true);
+  };
 
   // Fetch initial data
   const fetchData = async () => {
@@ -91,41 +105,59 @@ export default function BodyTable({ bodyFields, bodySettings }) {
     // Initialize initialData
     let initialData = {};
     bodyFields.forEach((field) => {
-      initialData[field.sFieldCaption] = "";
+      initialData[field.sFieldName] = "";
     });
-
     // Conditionally remove the "Batch" field if bEnableBatch is false
     if (bodySettings?.bEnableBatch === false) {
-      delete initialData["Batch"];
+      delete initialData["sBatch"];
     }
-    setData([initialData]);
     setFormData([initialData]);
 
     setOpen(false);
+    const currentDate = new Date().toISOString().split("T")[0]; // Formats the date as YYYY-MM-DD
+
+    const initialData2 = {
+      iId: 1,
+      Batch: "",
+      "Exp.Date": bodySettings?.bExpDateforBatch ? currentDate : "",
+      "Manuf.Date": bodySettings?.bManf_dt ? currentDate : "",
+      "Tot.Qty": "",
+    };
+    // Remove keys that are not needed based on settings
+    if (!bodySettings?.bExpDateforBatch) {
+      delete initialData2["Exp.Date"];
+    }
+
+    if (!bodySettings?.bManf_dt) {
+      delete initialData2["Manuf.Date"];
+    }
+
+    setBatchData([initialData2]);
   };
 
   React.useEffect(() => {
     fetchData();
-  }, [bodyFields]);
-
-  React.useEffect(() => {
-    // Remove focus from any input fields on component mount
-    if (tableContainerRef.current) {
-      const inputs = tableContainerRef.current.querySelectorAll("input");
-      inputs.forEach((input) => {
-        input.blur();
-      });
-    }
-  }, []);
+  }, [bodyFields, bodySettings]);
 
   const handleBatchOpen = (value, type) => {
-    const quantity = Number(data[value]?.fQty);
+    const quantity = Number(formData[value]?.fQty);
+    const iItem = formData[value]?.iItem;
+    const bBatch = formData[value]?.bBatch;
+    const bSerial = formData[value]?.bSerial;
   
-    if (type === 1 && !quantity) {
-      setMessage("Enter Quantity");
+    const emptyFields = [];
+    
+    if (!quantity) emptyFields.push("Qty");
+    if (!iItem) emptyFields.push("Item");
+    if (type === 1 && !bBatch) emptyFields.push("Valid Item");
+    if (type === 2 && !bSerial) emptyFields.push("Valid Item");
+  
+    if (emptyFields.length > 0) {
       handleOpenAlert();
+      setMessage(`Enter ${emptyFields[0]}.`);
       return;
     }
+  
     setModal(type);
     setQty(quantity);
     setBatchModal(true);
@@ -141,9 +173,6 @@ export default function BodyTable({ bodyFields, bodySettings }) {
   };
 
   const handleBatchSubmit = (values) => {
-    let update = [...data];
-    update[row]["Serial No"] = values;
-    setData(update);
     handleBatchClose();
   };
 
@@ -153,33 +182,27 @@ export default function BodyTable({ bodyFields, bodySettings }) {
       bodyFields.forEach((field) => {
         initialData[field.sFieldCaption] = "";
       });
-      setData([...data, initialData]);
       setFormData([...formData, initialData]);
     } else {
-      setData(data.slice(0, -1));
       setFormData(formData.slice(0, -1));
     }
   };
 
   const handleInputChange = (event, fieldName, index) => {
     const value = event.target.value;
-    let updatedData = [...data];
     let updatedFormData = [...formData];
-
-    updatedData[index][fieldName] = value;
     updatedFormData[index][fieldName] = value;
-
-    setData(updatedData);
     setFormData(updatedFormData);
   };
- 
+
+  console.log(formData);
   return (
     <>
       <MDBCard
         className="text-center mt-2"
         style={{ boxShadow: "0 4px 8px rgba(0, 0, 0, 0.3)" }}
       >
-        {data.length > 0 && (
+        {formData.length > 0 && (
           <TableContainer
             ref={tableContainerRef}
             style={{
@@ -198,12 +221,13 @@ export default function BodyTable({ bodyFields, bodySettings }) {
               size="small"
             >
               <EnhancedTableHead
-                rows={Object.keys(data[0])}
                 handleBatchOpen={handleBatchOpen}
+                bodyFields={bodyFields}
+                batchEnable={bodySettings?.bEnableBatch}
               />
 
               <TableBody>
-                {data.map((row, indexNum) => {
+                {formData.map((row, indexNum) => {
                   const labelId = `enhanced-table-checkbox-${indexNum}`;
 
                   return (
@@ -257,7 +281,7 @@ export default function BodyTable({ bodyFields, bodySettings }) {
                                       sx={{ fontSize: "1.2rem" }}
                                     />
                                   </IconButton>
-                                  {data?.length > 1 && (
+                                  {formData?.length > 1 && (
                                     <IconButton
                                       onClick={() => {
                                         handleRow(0);
@@ -301,22 +325,66 @@ export default function BodyTable({ bodyFields, bodySettings }) {
                             padding="0px"
                             align="left"
                           >
-                            {field?.iFieldID === 6 ? (
+                            {field?.iDataType === 10 ? (
                               <TextField
                                 hidden={!bodySettings?.bEnableBatch}
                                 id={`form3Example${index + 1}`}
-                                type={
-                                  field.iDataType === 1 ||
-                                  field.iDataType === 4 ||
-                                  field.iDataType === 8
-                                    ? "number"
-                                    : "text"
-                                }
+                                type="text"
                                 readOnly={field.bReadOnly}
                                 size="small"
-                                value={formData[indexNum][field.sFieldName] || ""}
+                                value={
+                                  formData[indexNum][field.sFieldName]
+                                    ? formData[indexNum][field.sFieldName]
+                                    : formData[indexNum]?.bBatch
+                                    ? "Select Batch"
+                                    : "NA"
+                                }
                                 fullWidth
                                 onClick={() => handleBatchOpen(indexNum, 1)}
+                                autoComplete="off"
+                                sx={{
+                                  padding: 0,
+                                  margin: 0,
+                                  width: 250, // Adjust the width as needed
+                                  "& .MuiInputBase-root": {
+                                    height: 30, // Adjust the height of the input area
+                                  },
+                                  "& .MuiInputLabel-root": {
+                                    transform:
+                                      "translate(10px, 5px) scale(0.9)", // Adjust label position when not focused
+                                  },
+                                  "& .MuiInputLabel-shrink": {
+                                    transform:
+                                      "translate(14px, -9px) scale(0.75)", // Adjust label position when focused
+                                  },
+                                  "& .MuiInputBase-input": {
+                                    fontSize: "0.75rem", // Adjust the font size of the input text
+                                  },
+                                  "&.Mui-focused .MuiOutlinedInput-notchedOutline":
+                                    {
+                                      borderColor: "currentColor", // Keeps the current border color
+                                    },
+                                  "&:hover .MuiOutlinedInput-notchedOutline": {
+                                    borderColor: "currentColor", // Optional: Keeps the border color on hover
+                                  },
+                                }}
+                              />
+                            ) : field?.iDataType === 11 ? (
+                              <TextField
+                              
+                                id={`form3Example${index + 1}`}
+                                type="text"
+                                readOnly={field.bReadOnly}
+                                size="small"
+                                value={
+                                  formData[indexNum][field.sFieldName]
+                                    ? formData[indexNum][field.sFieldName]
+                                    : formData[indexNum]?.bSerial
+                                    ? "Select Serial No"
+                                    : "NA"
+                                }
+                                fullWidth
+                                onClick={() => handleBatchOpen(indexNum, 2)}
                                 autoComplete="off"
                                 sx={{
                                   padding: 0,
@@ -353,9 +421,15 @@ export default function BodyTable({ bodyFields, bodySettings }) {
                                     type="date"
                                     readOnly={field.bReadOnly}
                                     size="small"
-                                    value={formData[indexNum][field.sFieldName] || ""}
+                                    value={
+                                      formData[indexNum][field.sFieldName] || ""
+                                    }
                                     onChange={(e) =>
-                                      handleInputChange(e, field.sFieldName, indexNum)
+                                      handleInputChange(
+                                        e,
+                                        field.sFieldName,
+                                        indexNum
+                                      )
                                     }
                                     fullWidth
                                     autoComplete="off"
@@ -363,10 +437,11 @@ export default function BodyTable({ bodyFields, bodySettings }) {
                                   />
                                 ) : field.iDataType === 5 ||
                                   field.iDataType === 6 ? (
-                                    <AutoCompleteTable
+                                  <AutoCompleteTable
                                     iTag={field.iLinkTag}
                                     iUser={localStorage.getItem("userId")}
                                     fieldName={field.sFieldName}
+                                    fieldCaption={field.sFieldCaption}
                                     value={formData}
                                     inputValue={setFormData}
                                     row={indexNum}
@@ -384,9 +459,15 @@ export default function BodyTable({ bodyFields, bodySettings }) {
                                     }
                                     readOnly={field.bReadOnly}
                                     size="small"
-                                    value={formData[indexNum][field.sFieldName] || ""}
+                                    value={
+                                      formData[indexNum][field.sFieldName] || ""
+                                    }
                                     onChange={(e) =>
-                                      handleInputChange(e, field.sFieldName, indexNum)
+                                      handleInputChange(
+                                        e,
+                                        field.sFieldName,
+                                        indexNum
+                                      )
                                     }
                                     fullWidth
                                     onClick={(e) => e.stopPropagation()}
@@ -435,17 +516,26 @@ export default function BodyTable({ bodyFields, bodySettings }) {
 
       {modal === 1 ? (
         <BatchModal
-        settings={bodySettings}
           isOpen={batchModal}
           handleCloseModal={handleBatchClose}
           qty={qty}
+          settings={bodySettings}
+          batchData={batchData}
+          setBatchData={setBatchData}
+          setFormData={setFormData}
+          formData={formData}
+          row={row}
         />
       ) : modal === 2 ? (
         <SerialNoModal
           isOpen={batchModal}
           handleCloseModal={handleBatchClose}
           qty={qty}
-          handleSubmit={handleBatchSubmit}
+          serialData={serialData}
+          setSerialData={setSerialData}
+          formData={formData}
+          setFormData={setFormData}
+          row={row}
         />
       ) : modal === 3 ? (
         <AddCharges1

@@ -74,7 +74,6 @@ const DetailPage = ({ iUser, details, iTransId, action }) => {
       const response2 = await getMainSettings();
       if(response2?.Status === "Success"){
         const myObject = JSON.parse(response2?.ResultData)
-        console.log(myObject);
         setBodySettings(myObject.Batch[0]);
       }
     };

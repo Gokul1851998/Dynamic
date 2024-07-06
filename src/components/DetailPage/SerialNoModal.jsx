@@ -50,7 +50,11 @@ export default function SerialNoModal({
   isOpen,
   handleCloseModal,
   qty,
-  handleSubmit,
+  serialData,
+  setSerialData,
+  formData,
+  setFormData,
+  row,
 }) {
   const [open, setOpen] = React.useState(false);
   const [warning, setWarning] = useState(false);
@@ -85,6 +89,9 @@ export default function SerialNoModal({
     color: `#ffff`,
     backgroundColor: `#8c99e0`,
     boxShadow: "0px 5px 15px rgba(0, 0, 0, 0.3)",
+    margin: 3,
+    fontSize: "12px",
+    padding: "6px 10px",
   };
 
   const handleClose = () => {
@@ -101,7 +108,7 @@ export default function SerialNoModal({
 
     if (isNumeric) {
       const numericStart = parseInt(start, 10);
-      for (let i = 0; i <= limitValue; i++) {
+      for (let i = 0; i < limitValue; i++) {
         array.push(numericStart + i);
       }
     } else {
@@ -110,13 +117,31 @@ export default function SerialNoModal({
         const prefix = match[1];
         let number = parseInt(match[2], 10);
 
-        for (let i = 0; i <= limitValue; i++) {
+        for (let i = 0; i < limitValue; i++) {
           array.push(`${prefix}${number + i}`);
         }
       }
     }
+    setSerialData(array);
+  };
 
-    handleSubmit(array.join());
+  const handleSerialNumberChange = (index, value) => {
+    let update = [...serialData];
+    update[index] = value;
+    setSerialData(update);
+  };
+
+  const handleLoad = async () => {
+    if (serialData.length) {
+      const serialNumber = serialData.map((item) => item).join(", ");
+      let update = [...formData];
+      update[row].sSerialNo = serialNumber;
+      setFormData(update);
+      handleCloseModal()
+    } else {
+      setMessage("Enter Start Limit");
+      handleOpenAlert();
+    }
   };
 
   return (
@@ -151,6 +176,13 @@ export default function SerialNoModal({
                   >
                     Serial Number Generation
                   </Typography>
+                  <Button
+                    onClick={handleStart}
+                    variant="contained"
+                    style={buttonStyle}
+                  >
+                    Allocation
+                  </Button>
                 </Stack>
 
                 <Box
@@ -221,7 +253,36 @@ export default function SerialNoModal({
                   />
                 </Box>
 
-                <CardContent></CardContent>
+                <CardContent>
+                  <Box
+                    sx={{
+                      display: "grid",
+                      gridTemplateColumns: "repeat( minmax(100px, 1fr))",
+                      maxHeight: "50vh",
+                      overflowY: "scroll",
+                      scrollbarWidth: "thin",
+                    }}
+                  >
+                    {serialData &&
+                      serialData.map((sn, index) => (
+                        <TextField
+                          key={index}
+                          value={sn}
+                          onChange={(e) =>
+                            handleSerialNumberChange(index, e.target.value)
+                          }
+                          margin="dense"
+                          sx={{
+                            backgroundColor: "white",
+                            borderRadius: "5px",
+                            height: "30px",
+                            width: "100px",
+                          }}
+                          InputProps={{ sx: { height: "30px" } }}
+                        />
+                      ))}
+                  </Box>
+                </CardContent>
                 <Stack
                   direction="row"
                   spacing={1}
@@ -229,7 +290,7 @@ export default function SerialNoModal({
                   justifyContent="flex-end"
                 >
                   <Button
-                    onClick={handleStart}
+                    onClick={handleLoad}
                     variant="contained"
                     style={buttonStyle}
                   >

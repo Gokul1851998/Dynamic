@@ -51,12 +51,17 @@ export default function BatchModal({
   handleCloseModal,
   qty,
   settings,
+  batchData,
+  setBatchData,
+  setFormData,
+  formData,
+  row
 }) {
   const [open, setOpen] = React.useState(false);
   const [warning, setWarning] = useState(false);
   const [message, setMessage] = useState("");
   const [data, setData] = useState([]);
-  console.log(settings);
+
   const handleCloseAlert = (event, reason) => {
     if (reason === "clickaway") {
       return;
@@ -65,29 +70,8 @@ export default function BatchModal({
   };
 
   useEffect(() => {
-    const currentDate = new Date().toISOString().split("T")[0]; // Formats the date as YYYY-MM-DD
-  
-    const initialData = {
-      iId: 1,
-      Batch: "",
-      "Exp.Date": settings?.bExpDateforBatch ? currentDate : "",
-      "Manuf.Date": settings?.bManf_dt ? currentDate : "",
-      "Tot.Qty": "",
-    };
-  
-    // Remove keys that are not needed based on settings
-    if (!settings?.bExpDateforBatch) {
-      delete initialData["Exp.Date"];
-    }
-  
-    if (!settings?.bManf_dt) {
-      delete initialData["Manuf.Date"];
-    }
-  
-    setData([initialData]);
-  }, [settings]);
-  
-  
+    setData([...batchData]);
+  }, [batchData]);
 
   const handleOpenAlert = () => {
     setWarning(true);
@@ -98,12 +82,6 @@ export default function BatchModal({
   };
 
   const iUser = Number(localStorage.getItem("userId"));
-
-  useEffect(() => {
-    handleOpen();
-
-    handleClose();
-  }, [isOpen]);
 
   const buttonStyle = {
     textTransform: "none",
@@ -118,32 +96,32 @@ export default function BatchModal({
   const handleOpen = () => {
     setOpen(true);
   };
-  const handleRow = (type)=>{
-    if(type === 1){
+  const handleRow = (type,indexNum) => {
+    if (type === 1) {
       const currentDate = new Date().toISOString().split("T")[0]; // Formats the date as YYYY-MM-DD
-  
+     
       const initialData = {
-        iId: 1,
+        iId: indexNum+2,
         Batch: "",
         "Exp.Date": settings?.bExpDateforBatch ? currentDate : "",
         "Manuf.Date": settings?.bManf_dt ? currentDate : "",
         "Tot.Qty": "",
       };
-    
+
       // Remove keys that are not needed based on settings
       if (!settings?.bExpDateforBatch) {
         delete initialData["Exp.Date"];
       }
-    
+
       if (!settings?.bManf_dt) {
         delete initialData["Manuf.Date"];
       }
-    
-      setData([...data,initialData]);
-    }else{
+
+      setData([...data, initialData]);
+    } else {
       setData(data.slice(0, -1));
     }
-  }
+  };
 
   const checkBatchAndQtyFilled = (data) => {
     for (let i = 0; i < data.length; i++) {
@@ -156,19 +134,24 @@ export default function BatchModal({
     return true;
   };
 
-  const handleLoad = ()=>{
+  const handleLoad = () => {
     if (checkBatchAndQtyFilled(data)) {
       const totalQty = data.reduce((total, item) => {
         return total + Number(item["Tot.Qty"]);
       }, 0);
-      if(totalQty === qty){
-
-      }else{
+      if (totalQty === qty) {
+        setBatchData([...data])
+        const batchNames = data.map(item => item.Batch).join(', ');
+        let update = [...formData]
+        update[row].sBatch = batchNames
+        setFormData(update)
+        handleCloseModal()
+      } else {
         setMessage("Total Quandity is not match");
         handleOpenAlert();
       }
     }
-  }
+  };
 
   return (
     <div>
@@ -354,7 +337,7 @@ export default function BatchModal({
                                           <Stack direction="row">
                                             <IconButton
                                               onClick={() => {
-                                                handleRow(1);
+                                                handleRow(1,indexNum);
                                                 popupState.close(); // Close the popover
                                               }}
                                               aria-label="add"
@@ -451,7 +434,11 @@ export default function BatchModal({
                   padding={2}
                   justifyContent="flex-end"
                 >
-                  <Button onClick={handleLoad} variant="contained" style={buttonStyle}>
+                  <Button
+                    onClick={handleLoad}
+                    variant="contained"
+                    style={buttonStyle}
+                  >
                     Load
                   </Button>
                   <Button
