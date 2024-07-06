@@ -24,6 +24,7 @@ import AddCharges1 from "./AddCharges1";
 import AutoCompleteTable from "../AutoComplete/ActoCompleteTable";
 import TableInput2 from "../Input/TableInput";
 import DynamicInputs from "./DynamicInputs";
+import ErrorMessage from "../ErrorMessage/ErrorMessage";
 
 function EnhancedTableHead({ rows, handleBatchOpen }) {
   return (
@@ -60,21 +61,6 @@ function EnhancedTableHead({ rows, handleBatchOpen }) {
   );
 }
 
-function EnhancedTableToolbar({ values, changes }) {
-  return (
-    <Toolbar sx={{ pl: { sm: 2 }, pr: { xs: 1, sm: 1 } }}>
-      <Typography
-        sx={{ flex: "1 1 100%" }}
-        variant="h6"
-        id="tableTitle"
-        component="div"
-      >
-        Purchase
-      </Typography>
-    </Toolbar>
-  );
-}
-
 export default function BodyTable({ bodyFields, bodySettings }) {
   const iUser = localStorage.getItem("userId");
   const location = useLocation();
@@ -86,37 +72,35 @@ export default function BodyTable({ bodyFields, bodySettings }) {
   const [modal, setModal] = React.useState(0);
   const [row, setRow] = React.useState(0);
   const tableContainerRef = React.useRef(null);
-  const [formData, setFormData] = React.useState({});
+  const [formData, setFormData] = React.useState([]);
+  const [warning, setWarning] = React.useState(false)
+  const [message, setMessage] = React.useState("")
+
+  const handleCloseAlert = ()=>{
+    setWarning(false)
+  }
+
+  const handleOpenAlert = ()=>{
+    setWarning(true)
+  }
 
   // Fetch initial data
   const fetchData = async () => {
     setOpen(true);
-  
+
     // Initialize initialData
     let initialData = {};
     bodyFields.forEach((field) => {
       initialData[field.sFieldCaption] = "";
     });
-  
-    // Create a new object to hold the modified initial data
-    let modifiedData = {};
-    const keys = Object.keys(initialData);
-    for (let i = 0; i < keys.length; i++) {
-      const key = keys[i];
-      modifiedData[key] = initialData[key];
-      
-      // Insert the "Batch" field after "Gross" if the condition is true
-      if (bodySettings?.bEnableBatch && key === "Gross") {
-        modifiedData["Batch"] = "";
-      }
+
+    // Conditionally remove the "Batch" field if bEnableBatch is false
+    if (bodySettings?.bEnableBatch === false) {
+      delete initialData["Batch"];
     }
-    
-    if(bodySettings?.bEnableBatch){
-      setData([modifiedData]);
-    } else {
-      setData([initialData]);
-    }
-    
+    setData([initialData]);
+    setFormData([initialData]);
+
     setOpen(false);
   };
 
@@ -135,11 +119,19 @@ export default function BodyTable({ bodyFields, bodySettings }) {
   }, []);
 
   const handleBatchOpen = (value, type) => {
+    const quantity = Number(data[value]?.fQty);
+  
+    if (type === 1 && !quantity) {
+      setMessage("Enter Quantity");
+      handleOpenAlert();
+      return;
+    }
     setModal(type);
-    setQty(data[value].Quantity);
+    setQty(quantity);
     setBatchModal(true);
     setRow(value);
   };
+  
 
   const handleBatchClose = () => {
     setBatchModal(false);
@@ -162,19 +154,25 @@ export default function BodyTable({ bodyFields, bodySettings }) {
         initialData[field.sFieldCaption] = "";
       });
       setData([...data, initialData]);
+      setFormData([...formData, initialData]);
     } else {
       setData(data.slice(0, -1));
+      setFormData(formData.slice(0, -1));
     }
   };
-  console.log(bodyFields);
-  const handleInputChange = (event, fieldName) => {
-    const value = event.target.value;
-    setFormData((prevData) => ({
-      ...prevData,
-      [fieldName]: value,
-    }));
-  };
 
+  const handleInputChange = (event, fieldName, index) => {
+    const value = event.target.value;
+    let updatedData = [...data];
+    let updatedFormData = [...formData];
+
+    updatedData[index][fieldName] = value;
+    updatedFormData[index][fieldName] = value;
+
+    setData(updatedData);
+    setFormData(updatedFormData);
+  };
+ 
   return (
     <>
       <MDBCard
@@ -214,7 +212,7 @@ export default function BodyTable({ bodyFields, bodySettings }) {
                       className={`table-row `}
                       role="checkbox"
                       tabIndex={-1}
-                      key={row.iTransDtId}
+                      key={indexNum}
                       sx={{ cursor: "pointer" }}
                     >
                       <TableCell padding="checkbox">
@@ -289,17 +287,142 @@ export default function BodyTable({ bodyFields, bodySettings }) {
                             !["iTransDtId"].includes(field.sFieldName)
                         )
                         .map((field, index) => (
-                          <DynamicInputs
-                            index={index}
-                            labelId={labelId}
-                            field={field}
-                            formData={formData}
-                            handleInputChange={handleInputChange}
-                            setFormData={setFormData}
-                            data={data}
-                            indexNum={indexNum}
-                            setData={setData}
-                          />
+                          <TableCell
+                            sx={{
+                              padding: 0,
+                              border: "1px solid #ddd",
+                              whiteSpace: "nowrap",
+                              overflow: "hidden",
+                            }}
+                            key={index + labelId}
+                            component="th"
+                            id={labelId}
+                            scope="row"
+                            padding="0px"
+                            align="left"
+                          >
+                            {field?.iFieldID === 6 ? (
+                              <TextField
+                                hidden={!bodySettings?.bEnableBatch}
+                                id={`form3Example${index + 1}`}
+                                type={
+                                  field.iDataType === 1 ||
+                                  field.iDataType === 4 ||
+                                  field.iDataType === 8
+                                    ? "number"
+                                    : "text"
+                                }
+                                readOnly={field.bReadOnly}
+                                size="small"
+                                value={formData[indexNum][field.sFieldName] || ""}
+                                fullWidth
+                                onClick={() => handleBatchOpen(indexNum, 1)}
+                                autoComplete="off"
+                                sx={{
+                                  padding: 0,
+                                  margin: 0,
+                                  width: 250, // Adjust the width as needed
+                                  "& .MuiInputBase-root": {
+                                    height: 30, // Adjust the height of the input area
+                                  },
+                                  "& .MuiInputLabel-root": {
+                                    transform:
+                                      "translate(10px, 5px) scale(0.9)", // Adjust label position when not focused
+                                  },
+                                  "& .MuiInputLabel-shrink": {
+                                    transform:
+                                      "translate(14px, -9px) scale(0.75)", // Adjust label position when focused
+                                  },
+                                  "& .MuiInputBase-input": {
+                                    fontSize: "0.75rem", // Adjust the font size of the input text
+                                  },
+                                  "&.Mui-focused .MuiOutlinedInput-notchedOutline":
+                                    {
+                                      borderColor: "currentColor", // Keeps the current border color
+                                    },
+                                  "&:hover .MuiOutlinedInput-notchedOutline": {
+                                    borderColor: "currentColor", // Optional: Keeps the border color on hover
+                                  },
+                                }}
+                              />
+                            ) : (
+                              <>
+                                {field.iDataType === 3 ? (
+                                  <TextField
+                                    id={`form3Example${index + 1}`}
+                                    type="date"
+                                    readOnly={field.bReadOnly}
+                                    size="small"
+                                    value={formData[indexNum][field.sFieldName] || ""}
+                                    onChange={(e) =>
+                                      handleInputChange(e, field.sFieldName, indexNum)
+                                    }
+                                    fullWidth
+                                    autoComplete="off"
+                                    onClick={(e) => e.stopPropagation()}
+                                  />
+                                ) : field.iDataType === 5 ||
+                                  field.iDataType === 6 ? (
+                                    <AutoCompleteTable
+                                    iTag={field.iLinkTag}
+                                    iUser={localStorage.getItem("userId")}
+                                    fieldName={field.sFieldName}
+                                    value={formData}
+                                    inputValue={setFormData}
+                                    row={indexNum}
+                                    fullWidth
+                                  />
+                                ) : (
+                                  <TextField
+                                    id={`form3Example${index + 1}`}
+                                    type={
+                                      field.iDataType === 1 ||
+                                      field.iDataType === 4 ||
+                                      field.iDataType === 8
+                                        ? "number"
+                                        : "text"
+                                    }
+                                    readOnly={field.bReadOnly}
+                                    size="small"
+                                    value={formData[indexNum][field.sFieldName] || ""}
+                                    onChange={(e) =>
+                                      handleInputChange(e, field.sFieldName, indexNum)
+                                    }
+                                    fullWidth
+                                    onClick={(e) => e.stopPropagation()}
+                                    autoComplete="off"
+                                    sx={{
+                                      padding: 0,
+                                      margin: 0,
+                                      width: 250, // Adjust the width as needed
+                                      "& .MuiInputBase-root": {
+                                        height: 30, // Adjust the height of the input area
+                                      },
+                                      "& .MuiInputLabel-root": {
+                                        transform:
+                                          "translate(10px, 5px) scale(0.9)", // Adjust label position when not focused
+                                      },
+                                      "& .MuiInputLabel-shrink": {
+                                        transform:
+                                          "translate(14px, -9px) scale(0.75)", // Adjust label position when focused
+                                      },
+                                      "& .MuiInputBase-input": {
+                                        fontSize: "0.75rem", // Adjust the font size of the input text
+                                      },
+                                      "&.Mui-focused .MuiOutlinedInput-notchedOutline":
+                                        {
+                                          borderColor: "currentColor", // Keeps the current border color
+                                        },
+                                      "&:hover .MuiOutlinedInput-notchedOutline":
+                                        {
+                                          borderColor: "currentColor", // Optional: Keeps the border color on hover
+                                        },
+                                    }}
+                                  />
+                                )}
+                              </>
+                            )}
+                          </TableCell>
                         ))}
                     </TableRow>
                   );
@@ -312,6 +435,7 @@ export default function BodyTable({ bodyFields, bodySettings }) {
 
       {modal === 1 ? (
         <BatchModal
+        settings={bodySettings}
           isOpen={batchModal}
           handleCloseModal={handleBatchClose}
           qty={qty}
@@ -333,6 +457,11 @@ export default function BodyTable({ bodyFields, bodySettings }) {
       ) : null}
 
       <Loader open={open} handleClose={setOpen} />
+      <ErrorMessage
+        open={warning}
+        handleClose={handleCloseAlert}
+        message={message}
+      />
     </>
   );
 }

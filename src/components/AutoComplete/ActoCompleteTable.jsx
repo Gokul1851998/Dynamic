@@ -2,7 +2,7 @@ import { Autocomplete, TextField, Typography } from "@mui/material";
 import React, { useEffect, useState } from "react";
 import { getMasters } from "../../api/ApiCall";
 
-function AutoCompleteTable({ iTag, iUser, value, label, inputValue, fieldName }) {
+function AutoCompleteTable({ iTag, iUser, value, label, inputValue, fieldName, row }) {
   const [isF2Pressed, setIsF2Pressed] = useState(1);
   const [suggestions, setSuggestions] = useState([]);
   const [search, setSearch] = useState("");
@@ -24,10 +24,11 @@ function AutoCompleteTable({ iTag, iUser, value, label, inputValue, fieldName })
     };
 
     fetchData();
-  }, [isF2Pressed,iTag, iUser, search]);
+  }, [isF2Pressed, iTag, iUser, search]);
 
-  const handleAutocompleteChange = (event, newValue) => {
-    let updatedFormData = { ...value, [fieldName]: newValue?.sName || "" };
+  const handleAutocompleteChange = (event, newValue) => { 
+    let updatedFormData = [...value];
+    updatedFormData[row][fieldName] = newValue.sName;
     inputValue(updatedFormData);
   };
 
@@ -39,6 +40,7 @@ function AutoCompleteTable({ iTag, iUser, value, label, inputValue, fieldName })
         sCode: data?.sCode,
         iId: data?.iId,
       }))}
+      value={{ sName: value[row][fieldName] || "" }}
       onChange={handleAutocompleteChange}
       filterOptions={(options, { inputValue }) =>
         options.filter(
@@ -50,8 +52,8 @@ function AutoCompleteTable({ iTag, iUser, value, label, inputValue, fieldName })
       onInputChange={(event) => {
         if (event && event.target) {
           setSearch(event.target.value);
-        }else{
-            setSearch("")
+        } else {
+          setSearch("");
         }
       }}
       autoHighlight
@@ -119,3 +121,10 @@ function AutoCompleteTable({ iTag, iUser, value, label, inputValue, fieldName })
 }
 
 export default AutoCompleteTable;
+
+
+
+
+
+
+

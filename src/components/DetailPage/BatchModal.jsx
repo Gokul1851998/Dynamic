@@ -46,12 +46,17 @@ const Alert = React.forwardRef(function Alert(props, ref) {
   return <MuiAlert elevation={6} ref={ref} variant="filled" {...props} />;
 });
 
-export default function BatchModal({ isOpen, handleCloseModal, qty }) {
+export default function BatchModal({
+  isOpen,
+  handleCloseModal,
+  qty,
+  settings,
+}) {
   const [open, setOpen] = React.useState(false);
   const [warning, setWarning] = useState(false);
   const [message, setMessage] = useState("");
   const [data, setData] = useState([]);
-
+  console.log(settings);
   const handleCloseAlert = (event, reason) => {
     if (reason === "clickaway") {
       return;
@@ -61,8 +66,28 @@ export default function BatchModal({ isOpen, handleCloseModal, qty }) {
 
   useEffect(() => {
     const currentDate = new Date().toISOString().split("T")[0]; // Formats the date as YYYY-MM-DD
-    setData([{ iId: 1, Batch: "", "Exp.Date": currentDate, "Tot.Qty": "" }]);
-  }, []);
+  
+    const initialData = {
+      iId: 1,
+      Batch: "",
+      "Exp.Date": settings?.bExpDateforBatch ? currentDate : "",
+      "Manuf.Date": settings?.bManf_dt ? currentDate : "",
+      "Tot.Qty": "",
+    };
+  
+    // Remove keys that are not needed based on settings
+    if (!settings?.bExpDateforBatch) {
+      delete initialData["Exp.Date"];
+    }
+  
+    if (!settings?.bManf_dt) {
+      delete initialData["Manuf.Date"];
+    }
+  
+    setData([initialData]);
+  }, [settings]);
+  
+  
 
   const handleOpenAlert = () => {
     setWarning(true);
@@ -93,6 +118,57 @@ export default function BatchModal({ isOpen, handleCloseModal, qty }) {
   const handleOpen = () => {
     setOpen(true);
   };
+  const handleRow = (type)=>{
+    if(type === 1){
+      const currentDate = new Date().toISOString().split("T")[0]; // Formats the date as YYYY-MM-DD
+  
+      const initialData = {
+        iId: 1,
+        Batch: "",
+        "Exp.Date": settings?.bExpDateforBatch ? currentDate : "",
+        "Manuf.Date": settings?.bManf_dt ? currentDate : "",
+        "Tot.Qty": "",
+      };
+    
+      // Remove keys that are not needed based on settings
+      if (!settings?.bExpDateforBatch) {
+        delete initialData["Exp.Date"];
+      }
+    
+      if (!settings?.bManf_dt) {
+        delete initialData["Manuf.Date"];
+      }
+    
+      setData([...data,initialData]);
+    }else{
+      setData(data.slice(0, -1));
+    }
+  }
+
+  const checkBatchAndQtyFilled = (data) => {
+    for (let i = 0; i < data.length; i++) {
+      if (!data[i].Batch || !data[i]["Tot.Qty"]) {
+        setMessage("Batch and Quantity must be filled in all rows");
+        handleOpenAlert();
+        return false;
+      }
+    }
+    return true;
+  };
+
+  const handleLoad = ()=>{
+    if (checkBatchAndQtyFilled(data)) {
+      const totalQty = data.reduce((total, item) => {
+        return total + Number(item["Tot.Qty"]);
+      }, 0);
+      if(totalQty === qty){
+
+      }else{
+        setMessage("Total Quandity is not match");
+        handleOpenAlert();
+      }
+    }
+  }
 
   return (
     <div>
@@ -277,10 +353,10 @@ export default function BatchModal({ isOpen, handleCloseModal, qty }) {
                                         >
                                           <Stack direction="row">
                                             <IconButton
-                                              // onClick={() => {
-                                              //   handleRow(1);
-                                              //   popupState.close(); // Close the popover
-                                              // }}
+                                              onClick={() => {
+                                                handleRow(1);
+                                                popupState.close(); // Close the popover
+                                              }}
                                               aria-label="add"
                                               color="#8c99e0"
                                               sx={{
@@ -294,10 +370,10 @@ export default function BatchModal({ isOpen, handleCloseModal, qty }) {
                                             </IconButton>
                                             {data?.length > 1 ? (
                                               <IconButton
-                                                // onClick={() => {
-                                                //   handleRow(0);
-                                                //   popupState.close(); // Close the popover
-                                                // }}
+                                                onClick={() => {
+                                                  handleRow(0);
+                                                  popupState.close(); // Close the popover
+                                                }}
                                                 aria-label="remove"
                                                 sx={{
                                                   fontSize: "1.2rem",
@@ -331,7 +407,8 @@ export default function BatchModal({ isOpen, handleCloseModal, qty }) {
                                         padding="0px"
                                         align="left"
                                       >
-                                        {column === "Exp.Date" ? (
+                                        {column === "Exp.Date" ||
+                                        column === "Manuf.Date" ? (
                                           <TableModalInput
                                             type="date"
                                             value={data}
@@ -374,7 +451,7 @@ export default function BatchModal({ isOpen, handleCloseModal, qty }) {
                   padding={2}
                   justifyContent="flex-end"
                 >
-                  <Button variant="contained" style={buttonStyle}>
+                  <Button onClick={handleLoad} variant="contained" style={buttonStyle}>
                     Load
                   </Button>
                   <Button

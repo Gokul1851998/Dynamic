@@ -3,7 +3,7 @@ import React from "react";
 
 export default function TableModalInput({ type, column, row, value, setValue }) {
   const handleChange = (e) => {
-    const newValue = e.target.value;
+    const newValue = type === "number" ? Number(e.target.value) : e.target.value;
     const updatedValue = [...value];
     updatedValue[row][column] = newValue;
     setValue(updatedValue);
