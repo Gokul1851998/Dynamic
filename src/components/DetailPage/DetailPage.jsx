@@ -40,11 +40,13 @@ const groupFieldsByTab = (fields) => {
 
 const DetailPage = ({ iUser, details, iTransId, action }) => {
   const [activeTab, setActiveTab] = useState(0);
-  const [header, setHeader] = useState();
+  const [header, setHeader] = useState([]);
   const [body, setBody] = useState([]);
   const [bodyFields, setBodyFields] = useState([]);
-  const [bodySettings, setBodySettings] = useState({})
+  const [bodySettings, setBodySettings] = useState({});
   const [groupedFields, setGroupedFields] = useState({});
+  const [slNoSetting, setSlNoSettings] = useState({});
+  const [allDoc, setAllDoc] = useState([])
   const [tabs, setTabs] = useState([]);
   const [open, setOpen] = useState(false);
   const [childData, setChildData] = useState([]);
@@ -66,14 +68,16 @@ const DetailPage = ({ iUser, details, iTransId, action }) => {
       const response = await getDocSettings({ iDoctype: details?.iDocType });
       if (response?.Status === "Success") {
         const myObject = JSON.parse(response?.ResultData);
-        setBodyFields(myObject?.Body)
+        setAllDoc(myObject)
+        setBodyFields(myObject?.Body);
         const grouped = groupFieldsByTab(myObject?.Header);
         setGroupedFields(grouped);
         setTabs(Object.keys(grouped));
       }
       const response2 = await getMainSettings();
-      if(response2?.Status === "Success"){
-        const myObject = JSON.parse(response2?.ResultData)
+      if (response2?.Status === "Success") {
+        const myObject = JSON.parse(response2?.ResultData);
+        setSlNoSettings(myObject.RMA[0]);
         setBodySettings(myObject.Batch[0]);
       }
     };
@@ -86,7 +90,7 @@ const DetailPage = ({ iUser, details, iTransId, action }) => {
         handleOpen();
         const response = await getTransactionDetails({
           iUser,
-          iDocType:details?.iDocType,
+          iDocType: details?.iDocType,
           iTransId,
         });
         if (response?.Status === "Success") {
@@ -174,7 +178,7 @@ const DetailPage = ({ iUser, details, iTransId, action }) => {
           </MDBTabs>
         </MDBCardHeader>
         <MDBCardBody>
-          {tabs.length > 0  && (
+          {tabs.length > 0 && (
             <FormContent
               header={header}
               receiveData={receiveDataFromChild}
@@ -183,7 +187,13 @@ const DetailPage = ({ iUser, details, iTransId, action }) => {
           )}
         </MDBCardBody>
       </MDBCard>
-      <BodyTable tableData={body} bodyFields={bodyFields} bodySettings={bodySettings} />
+      <BodyTable
+        tableData={body}
+        bodyFields={bodyFields}
+        bodySettings={bodySettings}
+        slNoSetting={slNoSetting}
+        allDoc={allDoc}
+      />
       <Loader open={open} handleClose={handleClose} />
     </>
   );

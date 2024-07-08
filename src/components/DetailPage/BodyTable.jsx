@@ -26,7 +26,12 @@ import TableInput2 from "../Input/TableInput";
 import DynamicInputs from "./DynamicInputs";
 import ErrorMessage from "../ErrorMessage/ErrorMessage";
 
-function EnhancedTableHead({ handleBatchOpen, bodyFields, batchEnable }) {
+function EnhancedTableHead({
+  handleBatchOpen,
+  batchEnable,
+  sLNoEnable,
+  allDoc,
+}) {
   return (
     <TableHead
       style={{
@@ -38,43 +43,66 @@ function EnhancedTableHead({ handleBatchOpen, bodyFields, batchEnable }) {
     >
       <TableRow>
         <TableCell
-          sx={{
-            padding: "4px",
-            border: "1px solid #ddd",
-            whiteSpace: "nowrap",
+          style={{
+            backgroundColor: "#8c99e0",
+            position: "sticky",
+            top: 0,
+            zIndex: "5",
           }}
           padding="checkbox"
         ></TableCell>
-        {bodyFields.map((header, index) => (
-          <>
-            {header.iDataType === 10 ? (
-              <TableCell
-                key={index}
-                sx={{ border: "1px solid #ddd", color: "#FFFF" }}
-                align="left"
-                padding="normal"
-                hidden={!batchEnable}
-              >
-                {header.sFieldCaption}
-              </TableCell>
-            ) : (
-              <TableCell
-                key={index}
-                sx={{ border: "1px solid #ddd", color: "#FFFF" }}
-                align="left"
-                padding="normal"
-              >
-                {header.sFieldCaption}
-              </TableCell>
-            )}
-          </>
-        ))}
+        {allDoc?.Body?.map((header, index) => {
+          const inputConfig = allDoc.Inputs.find(
+            (input) => input?.iInvVar == header?.iInvVar
+          );
+          const isClickable = inputConfig?.bBifurcation ?? false;
+          return (
+            <>
+              {header.iDataType === 10 ? (
+                <TableCell
+                  key={index}
+                  sx={{ border: "1px solid #ddd", color: "#FFFF" }}
+                  align="left"
+                  padding="normal"
+                  hidden={!batchEnable}
+                >
+                  {header.sFieldCaption}
+                </TableCell>
+              ) : header.iDataType === 11 ? (
+                <TableCell
+                  key={index}
+                  sx={{ border: "1px solid #ddd", color: "#FFFF" }}
+                  align="left"
+                  padding="normal"
+                  hidden={!sLNoEnable}
+                >
+                  {header.sFieldCaption}
+                </TableCell>
+              ) : (
+                <TableCell
+                  key={index}
+                  sx={{ border: "1px solid #ddd", color: "#FFFF" }}
+                  align="left"
+                  padding="normal"
+                  onClick={() => isClickable && handleBatchOpen(header.sFieldCaption, 3)}
+                >
+                  {header.sFieldCaption}
+                </TableCell>
+              )}
+            </>
+          );
+        })}
       </TableRow>
     </TableHead>
   );
 }
 
-export default function BodyTable({ bodyFields, bodySettings }) {
+export default function BodyTable({
+  bodyFields,
+  bodySettings,
+  slNoSetting,
+  allDoc,
+}) {
   const iUser = localStorage.getItem("userId");
   const location = useLocation();
   const iDocType = location.state;
@@ -88,7 +116,8 @@ export default function BodyTable({ bodyFields, bodySettings }) {
   const [warning, setWarning] = React.useState(false);
   const [message, setMessage] = React.useState("");
   const [batchData, setBatchData] = React.useState([]);
-  const [serialData, setSerialData] = React.useState([])
+  const [serialData, setSerialData] = React.useState([]);
+  const [bifurcation, setBifurcation] = React.useState([]);
 
   const handleCloseAlert = () => {
     setWarning(false);
@@ -144,26 +173,31 @@ export default function BodyTable({ bodyFields, bodySettings }) {
     const iItem = formData[value]?.iItem;
     const bBatch = formData[value]?.bBatch;
     const bSerial = formData[value]?.bSerial;
-  
+
     const emptyFields = [];
-    
+
     if (!quantity) emptyFields.push("Qty");
     if (!iItem) emptyFields.push("Item");
     if (type === 1 && !bBatch) emptyFields.push("Valid Item");
     if (type === 2 && !bSerial) emptyFields.push("Valid Item");
-  
+
     if (emptyFields.length > 0) {
       handleOpenAlert();
       setMessage(`Enter ${emptyFields[0]}.`);
       return;
     }
-  
+
     setModal(type);
     setQty(quantity);
     setBatchModal(true);
     setRow(value);
   };
-  
+
+  const handleBifi = (value, type) => {
+    setModal(type);
+    setBatchModal(true);
+    setRow(value);
+  };
 
   const handleBatchClose = () => {
     setBatchModal(false);
@@ -188,14 +222,84 @@ export default function BodyTable({ bodyFields, bodySettings }) {
     }
   };
 
-  const handleInputChange = (event, fieldName, index) => {
-    const value = event.target.value;
+  const handleInputChange = (event, fieldName, index, type) => {
+    const value = type === 8 ? Number(event.target.value) : event.target.value;
     let updatedFormData = [...formData];
+
+    if (type === 8) {
+      if (fieldName === "fRate") {
+        updatedFormData[index].fGross = updatedFormData[index].fQty * value;
+      } else if (fieldName === "fGross") {
+        updatedFormData[index].fRate = value / updatedFormData[index].fQty;
+      } else if (fieldName === "fQty") {
+        updatedFormData[index].fGross = updatedFormData[index].fRate * value;
+      }
+    }
+
     updatedFormData[index][fieldName] = value;
     setFormData(updatedFormData);
   };
 
-  console.log(formData);
+  const entireRowUpdate = (event, fieldName, index, type) => {
+    let updatedValues = [...formData];
+    Object.keys(formData[index]).forEach((key) => {
+      const inputConfig = allDoc.Inputs.find(
+        (input) =>
+          input?.iInvVar ===
+          allDoc.Body.find((h) => h.sFieldName === key)?.iInvVar
+      );
+
+      if (inputConfig) {
+        let { sInFormula, sOutFormula } = inputConfig;
+
+        const prepareFormula = (formula) => {
+          for (let i = 1; i <= 20; i++) {
+            formula = formula
+              .replace(
+                new RegExp(`\\bi${i}\\b`, "g"),
+                updatedValues[index][`input${i}`] || 0
+              ) // Ensure using updated values
+              .replace(
+                new RegExp(`\\bo${i}\\b`, "g"),
+                updatedValues[index][`output${i}`] || 0
+              );
+          }
+          return formula
+            .replace("%", "/100")
+            .replace("g", updatedValues[index].fGross);
+        };
+
+        if (sInFormula) {
+          const preparedInputFormula = prepareFormula(sInFormula);
+          try {
+            const inputValue = eval(preparedInputFormula);
+            updatedValues[index][key] = inputValue;
+          } catch (error) {
+            console.error("Error evaluating input formula: ", error);
+          }
+        }
+
+        if (sOutFormula) {
+          const preparedOutputFormula = prepareFormula(sOutFormula);
+          try {
+            const outputValue = eval(preparedOutputFormula);
+            updatedValues[index][`${key.replace("input", "output")}`] =
+              outputValue;
+          } catch (error) {
+            console.error("Error evaluating output formula: ", error);
+          }
+        } else {
+          // Directly link input to output when no output formula
+          const outputKey = `${key.replace("input", "output")}`;
+          if (key.startsWith("input") && !sOutFormula) {
+            updatedValues[index][outputKey] = updatedValues[index][key]; // Update output with the latest input
+          }
+        }
+      }
+    });
+    setFormData(updatedValues);
+  };
+
   return (
     <>
       <MDBCard
@@ -221,9 +325,10 @@ export default function BodyTable({ bodyFields, bodySettings }) {
               size="small"
             >
               <EnhancedTableHead
-                handleBatchOpen={handleBatchOpen}
-                bodyFields={bodyFields}
+                handleBatchOpen={handleBifi}
                 batchEnable={bodySettings?.bEnableBatch}
+                sLNoEnable={slNoSetting?.bRMASupt}
+                allDoc={allDoc}
               />
 
               <TableBody>
@@ -371,7 +476,7 @@ export default function BodyTable({ bodyFields, bodySettings }) {
                               />
                             ) : field?.iDataType === 11 ? (
                               <TextField
-                              
+                                hidden={!slNoSetting?.bRMASupt}
                                 id={`form3Example${index + 1}`}
                                 type="text"
                                 readOnly={field.bReadOnly}
@@ -451,14 +556,18 @@ export default function BodyTable({ bodyFields, bodySettings }) {
                                   <TextField
                                     id={`form3Example${index + 1}`}
                                     type={
-                                      field.iDataType === 1 ||
-                                      field.iDataType === 4 ||
-                                      field.iDataType === 8
-                                        ? "number"
-                                        : "text"
+                                      field.iDataType === 8 ? "number" : "text"
                                     }
                                     readOnly={field.bReadOnly}
                                     size="small"
+                                    onBlur={(e) =>
+                                      entireRowUpdate(
+                                        e,
+                                        field.sFieldName,
+                                        indexNum,
+                                        field.iDataType
+                                      )
+                                    }
                                     value={
                                       formData[indexNum][field.sFieldName] || ""
                                     }
@@ -466,7 +575,8 @@ export default function BodyTable({ bodyFields, bodySettings }) {
                                       handleInputChange(
                                         e,
                                         field.sFieldName,
-                                        indexNum
+                                        indexNum,
+                                        field.iDataType
                                       )
                                     }
                                     fullWidth
@@ -541,8 +651,9 @@ export default function BodyTable({ bodyFields, bodySettings }) {
         <AddCharges1
           isOpen={batchModal}
           handleCloseModal={handleBatchClose}
-          qty={qty}
-          handleSubmit={handleBatchSubmit}
+          row={row}
+          setBifurcation={setBifurcation}
+          bifurcation={bifurcation}
         />
       ) : null}
 

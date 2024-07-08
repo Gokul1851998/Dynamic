@@ -59,7 +59,6 @@ export default function SerialNoModal({
   const [open, setOpen] = React.useState(false);
   const [warning, setWarning] = useState(false);
   const [message, setMessage] = useState("");
-  const [start, setStart] = useState([]);
 
   const handleCloseAlert = (event, reason) => {
     if (reason === "clickaway") {
@@ -103,16 +102,18 @@ export default function SerialNoModal({
 
   const handleStart = () => {
     const limitValue = parseInt(qty, 10);
-    const isNumeric = !isNaN(start);
+    let startLimit = formData[row]?.startLimit
+    const isNumeric = !isNaN(startLimit);
     let array = [];
 
     if (isNumeric) {
-      const numericStart = parseInt(start, 10);
+      const numericStart = parseInt(startLimit, 10);
       for (let i = 0; i < limitValue; i++) {
         array.push(numericStart + i);
       }
     } else {
-      const match = start.match(/([a-zA-Z]+)([0-9]+)/);
+
+      const match = startLimit.match(/([a-zA-Z]+)([0-9]+)/);
       if (match) {
         const prefix = match[1];
         let number = parseInt(match[2], 10);
@@ -120,6 +121,9 @@ export default function SerialNoModal({
         for (let i = 0; i < limitValue; i++) {
           array.push(`${prefix}${number + i}`);
         }
+      }else{
+        setMessage("Check Start Limit");
+        handleOpenAlert();
       }
     }
     setSerialData(array);
@@ -137,7 +141,7 @@ export default function SerialNoModal({
       let update = [...formData];
       update[row].sSerialNo = serialNumber;
       setFormData(update);
-      handleCloseModal()
+      handleCloseModal();
     } else {
       setMessage("Enter Start Limit");
       handleOpenAlert();
@@ -228,8 +232,12 @@ export default function SerialNoModal({
                     size="small"
                     aria-readonly
                     type="text"
-                    value={start}
-                    onChange={(e) => setStart(e.target.value)}
+                    value={formData[row]?.startLimit || ""}
+                    onChange={(e) => {
+                      let update = [...formData];
+                      update[row].startLimit = e.target.value;
+                      setFormData(update);
+                    }}
                     label="Start Limit"
                     autoComplete="off"
                     autoFocus

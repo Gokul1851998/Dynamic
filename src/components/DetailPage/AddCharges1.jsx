@@ -52,14 +52,15 @@ const Alert = React.forwardRef(function Alert(props, ref) {
 export default function AddCharges1({
   isOpen,
   handleCloseModal,
-  qty,
-  handleSubmit,
+  row,
+  setBifurcation,
+  bifurcation,
 }) {
   const [open, setOpen] = React.useState(false);
   const [warning, setWarning] = useState(false);
   const [message, setMessage] = useState("");
-  const [start, setStart] = useState([]);
-
+  
+  console.log(row);
   const handleCloseAlert = (event, reason) => {
     if (reason === "clickaway") {
       return;
@@ -97,30 +98,9 @@ export default function AddCharges1({
     setOpen(true);
   };
 
-  const handleStart = () => {
-    const limitValue = parseInt(qty, 10);
-    const isNumeric = !isNaN(start);
-    let array = [];
-
-    if (isNumeric) {
-      const numericStart = parseInt(start, 10);
-      for (let i = 0; i <= limitValue; i++) {
-        array.push(numericStart + i);
-      }
-    } else {
-      const match = start.match(/([a-zA-Z]+)([0-9]+)/);
-      if (match) {
-        const prefix = match[1];
-        let number = parseInt(match[2], 10);
-
-        for (let i = 0; i <= limitValue; i++) {
-          array.push(`${prefix}${number + i}`);
-        }
-      }
-    }
-
-    handleSubmit(array.join());
-  };
+  const handleChanges = ()=>{
+    
+  }
 
   return (
     <div>
@@ -141,59 +121,64 @@ export default function AddCharges1({
             <div className="modal-content">
               <form>
                 <CardContent>
-              
-                    <MDBRow className="mb-4">
-                      <MDBCol>
-                        <AutoComplete2
-                          api={getMasters}
-                          iTag={13}
-                          label="Currency"
-                        />
-                      </MDBCol>
-                      <MDBCol>
-                        <NormalInput
-                          type="number"
-                          label="ExchangeRate"
-                        />
-                      </MDBCol>
-                    </MDBRow>
-                    <MDBRow className="mb-4">
-                      <MDBCol>
-                      <NormalInput
-                          type="number"
-                          label="Amount"
-                        />
-                      </MDBCol>
-                      <MDBCol>
-                      <NormalInput
-                          type="number"
-                          label="Trans Amount"
-                          read={true}
-                        />
-                      </MDBCol>
-                    </MDBRow>
-                    <MDBRow className="mb-4">
-                      <MDBCol>
-                      <NormalInput
-                          type="number"
-                          label="Base Amount"
-                          read={true}
-                        />
-                      </MDBCol>
-                    
-                    </MDBRow>
-                 </CardContent>
+                  <MDBRow className="mb-4">
+                    <MDBCol>
+                      <AutoComplete2
+                        api={getMasters}
+                        iTag={13}
+                        label="Currency"
+                      />
+                    </MDBCol>
+                    <MDBCol>
+                      <MDBInput
+                        size="small"
+                        id={`form3Example1`}
+                        label="Exchange Rate"
+                        type="number"
+                        autoComplete="off"
+                      />
+                    </MDBCol>
+                  </MDBRow>
+                  <MDBRow className="mb-4">
+                    <MDBCol>
+                      <MDBInput
+                        size="small"
+                        id={`form3Example2`}
+                        label="Amount"
+                        type="number"
+                        autoComplete="off"
+                      />
+                    </MDBCol>
+                    <MDBCol>
+                      <MDBInput
+                        size="small"
+                        id={`form3Example3`}
+                        label="Trans Amount"
+                        type="number"
+                        autoComplete="off"
+                      />
+                    </MDBCol>
+                  </MDBRow>
+                  <MDBRow className="mb-4">
+                    <MDBCol>
+                      <MDBInput
+                        size="small"
+                        id={`form3Example4`}
+                        label="Base Amount"
+                        type="number"
+                        autoComplete="off"
+                      />
+                    </MDBCol>
+                    <MDBCol></MDBCol>
+                  </MDBRow>
+                </CardContent>
                 <Stack
                   direction="row"
                   spacing={1}
                   padding={2}
                   justifyContent="flex-end"
                 >
-                  <Button
-                    onClick={handleStart}
-                    variant="contained"
-                    style={buttonStyle}
-                  >
+                  <Button variant="contained" style={buttonStyle}>
                     Load
                   </Button>
                   <Button
