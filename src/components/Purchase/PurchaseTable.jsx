@@ -35,6 +35,7 @@ import Stack from "@mui/material/Stack";
 import { useLocation } from "react-router-dom";
 import Swal from "sweetalert2";
 import DetailPage from "../DetailPage/DetailPage";
+import Demo from "../DetailPage/demo";
 
 function descendingComparator(a, b, orderBy) {
   if (b[orderBy] < a[orderBy]) {
@@ -578,10 +579,11 @@ export default function PurchaseTable() {
             </Paper>
           </>
         ) : (
-          <DetailPage iUser={iUser} iTransId={selected[0]} details={menu} action={handleEditClose}/>
+          <DetailPage iUser={iUser} iDocType={menu?.iDocType}  iTransId={selected[0] || 0} details={menu} action={handleEditClose}/>
         )}
       </Box>
       <Loader open={open} handleClose={handleClose} />
+      <Demo />
     </Box>
   );
 }

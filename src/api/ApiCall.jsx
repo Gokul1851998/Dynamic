@@ -111,4 +111,15 @@ export const getLogin = async (payload) => {
     }
   };
 
+  export const getPrev_Next_Top_DocNo = async (payload) => {
+    try {
+      const response = await axios.get(`${baseUrl}Prev_Next_Top_DocNo`, {
+        params: payload,
+      });
+      return response?.data;
+    } catch (error) {
+      console.log('Prev_Next_Top_DocNo',error);
+    }
+  };
+
 

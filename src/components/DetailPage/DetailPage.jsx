@@ -11,6 +11,7 @@ import { Button, Stack } from "@mui/material";
 import {
   getDocSettings,
   getMainSettings,
+  getPrev_Next_Top_DocNo,
   getTransactionDetails,
 } from "../../api/ApiCall";
 import FormContent from "./FormContent";
@@ -39,7 +40,7 @@ const groupFieldsByTab = (fields) => {
   }, {});
 };
 
-const DetailPage = ({ iUser, details, iTransId, action }) => {
+const DetailPage = ({ iUser, details, iTransId, action, iDocType }) => {
   const [activeTab, setActiveTab] = useState(0);
   const [header, setHeader] = useState([]);
   const [body, setBody] = useState([]);
@@ -88,7 +89,7 @@ const DetailPage = ({ iUser, details, iTransId, action }) => {
 
   useEffect(() => {
     const fetchData = async () => {
-      if (iTransId) {
+      if (iTransId !== 0) {
         handleOpen();
         const response = await getTransactionDetails({
           iUser,
@@ -103,6 +104,8 @@ const DetailPage = ({ iUser, details, iTransId, action }) => {
         handleClose();
       } else {
         setHeader();
+        let response2 = await getPrev_Next_Top_DocNo({iTransID:0,iType:1,iDocType:iDocType})
+        setHeader(response2?.Table);
       }
     };
     fetchData();

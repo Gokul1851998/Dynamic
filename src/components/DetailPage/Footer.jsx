@@ -5,6 +5,7 @@ import { Typography, Box } from "@mui/material";
 
 export default function Footer({ allDoc, getTableData }) {
   const [formData, setFormData] = useState([]);
+  const [totals, setTotals] = useState([])
 
   const fetchData = async () => {
     // Initialize initialData
@@ -29,19 +30,49 @@ export default function Footer({ allDoc, getTableData }) {
   };
 
   useEffect(() => {
-    const totalQty = getTableData?.reduce((acc, curr) => acc + curr.fQty, 0);
-    const totalGross = getTableData?.reduce((acc, curr) => acc + curr.fGross, 0);
-    const totalLineNet = getTableData?.reduce((acc, curr) => acc + curr.lineNet, 0);
-    setFormData((prevFormData) => {
-      const updatedFormData = [...prevFormData];
-      updatedFormData[0].qty = totalQty;
-      updatedFormData[0].gross = totalGross;
-      updatedFormData[0].net = totalLineNet;
-      return updatedFormData;
-    });
-  }, [getTableData]);
+    if (!allDoc.Inputs) return;
+  
+    // Identify which fields from the Inputs are to be totalled (those with bFooter true)
+    const footerFields = allDoc.Inputs
+      .filter(input => input.bFooter)
+      .map(input => ({
+        field: `output${input.iInvVar}`, // Assumes fields are dynamically named like 'output1', 'output2', etc.
+        name: input.sName
+      }));
+  
+    // Initial totals object with all footer fields set to 0
+    const initialTotals = footerFields.reduce((acc, field) => {
+      acc[field.name] = 0;
+      return acc;
+    }, {});
+  
+    // Calculate totals from tableData
+    const totals = getTableData.reduce((acc, row) => {
+      footerFields.forEach(field => {
+        if (row[field.field] !== undefined && !isNaN(parseFloat(row[field.field]))) {
+          acc[field.name] += parseFloat(row[field.field]);
+        }
+      });
+      return acc;
+    }, initialTotals);
+  
+    setTotals(totals);
+  
+  }, [getTableData, allDoc.Inputs]);
 
-  console.log(getTableData);
+  console.log(allDoc);
+
+  const renderTotals = () => {
+    return Object.entries(totals).map(([key, value]) => (
+          <Typography key={key} variant="subtitle1" component="div" sx={{ fontWeight: 'bold', color: "gray" }}>
+                {key.replace(/([A-Z])/g, ' $1').trim()}: {formatNumber(value)}
+        </Typography>
+    ));
+  };
+  const formatNumber = (num) => {
+    return new Intl.NumberFormat('en-US', { maximumFractionDigits: 2 }).format(num);
+  };
+  
 
   return (
     <MDBCard
@@ -99,15 +130,8 @@ export default function Footer({ allDoc, getTableData }) {
         ))}
       </MDBRow>
       <Box display="flex" justifyContent="space-between" alignItems="center" padding="10px 20px">
-        <Typography variant="subtitle1" component="div" sx={{ fontWeight: 'bold', color: "gray" }}>
-          Tot Quantity: {formData[0]?.qty || 0}
-        </Typography>
-        <Typography variant="subtitle1" component="div" sx={{ fontWeight: 'bold', color: "gray" }}>
-          Tot Gross: {formData[0]?.gross || 0}
-        </Typography>
-        <Typography variant="subtitle1" component="div" sx={{ fontWeight: 'bold', color: "gray" }}>
-          Net Amount: {formData[0]?.net || 0}
-        </Typography>
+      {renderTotals()}
+
       </Box>
     </MDBCard>
   );

@@ -5,11 +5,10 @@ import AutoCompleteCo from "../AutoComplete/AutoCompleteCo";
 const FormContent = ({ header, receiveData, headerFields }) => {
   const [formData, setFormData] = useState({});
 
-  // Initialize formData based on headerFields
   useEffect(() => {
     const initialData = {};
     headerFields.forEach((field) => {
-      initialData[field.sFieldName] ="";
+      initialData[field.sFieldName] = header[0][field.sFieldName] || "";
     });
     setFormData(initialData);
   }, [header, headerFields]);
