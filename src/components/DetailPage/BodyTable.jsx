@@ -60,7 +60,7 @@ function EnhancedTableHead({
             <>
               {header.iDataType === 10 ? (
                 <TableCell
-                  key={index}
+                  key={header.iFieldID}
                   sx={{ border: "1px solid #ddd", color: "#FFFF" }}
                   align="left"
                   padding="normal"
@@ -70,7 +70,7 @@ function EnhancedTableHead({
                 </TableCell>
               ) : header.iDataType === 11 ? (
                 <TableCell
-                  key={index}
+                key={header.iFieldID}
                   sx={{ border: "1px solid #ddd", color: "#FFFF" }}
                   align="left"
                   padding="normal"
@@ -80,11 +80,13 @@ function EnhancedTableHead({
                 </TableCell>
               ) : (
                 <TableCell
-                  key={index}
+                key={header.iFieldID}
                   sx={{ border: "1px solid #ddd", color: "#FFFF" }}
                   align="left"
                   padding="normal"
-                  onClick={() => isClickable && handleBatchOpen(header.sFieldCaption, 3)}
+                  onClick={() =>
+                    isClickable && handleBatchOpen(header.sFieldName, 3)
+                  }
                 >
                   {header.sFieldCaption}
                 </TableCell>
@@ -102,6 +104,7 @@ export default function BodyTable({
   bodySettings,
   slNoSetting,
   allDoc,
+  handleGetTableData
 }) {
   const iUser = localStorage.getItem("userId");
   const location = useLocation();
@@ -118,6 +121,7 @@ export default function BodyTable({
   const [batchData, setBatchData] = React.useState([]);
   const [serialData, setSerialData] = React.useState([]);
   const [bifurcation, setBifurcation] = React.useState([]);
+  const [bifurcationApplied, setbifurcationApplied] = React.useState(false);
 
   const handleCloseAlert = () => {
     setWarning(false);
@@ -168,6 +172,10 @@ export default function BodyTable({
     fetchData();
   }, [bodyFields, bodySettings]);
 
+  React.useEffect(()=>{
+    handleGetTableData(formData)
+  },[formData])
+
   const handleBatchOpen = (value, type) => {
     const quantity = Number(formData[value]?.fQty);
     const iItem = formData[value]?.iItem;
@@ -200,6 +208,9 @@ export default function BodyTable({
   };
 
   const handleBatchClose = () => {
+    if (modal === 3) {
+      setbifurcationApplied(true);
+    }
     setBatchModal(false);
     setQty(0);
     setModal(0);
@@ -214,7 +225,7 @@ export default function BodyTable({
     if (type === 1) {
       const initialData = {};
       bodyFields.forEach((field) => {
-        initialData[field.sFieldCaption] = "";
+        initialData[field.sFieldName] = "";
       });
       setFormData([...formData, initialData]);
     } else {
@@ -241,14 +252,15 @@ export default function BodyTable({
   };
 
   const entireRowUpdate = (event, fieldName, index, type) => {
-    let updatedValues = [...formData];
+    let updatedValues = [...formData]; // Start with a copy of the current state to ensure all fields are accounted for
+    let lineNetValue = 0;
+    let lineStockValue = 0;
     Object.keys(formData[index]).forEach((key) => {
       const inputConfig = allDoc.Inputs.find(
         (input) =>
           input?.iInvVar ===
           allDoc.Body.find((h) => h.sFieldName === key)?.iInvVar
       );
-
       if (inputConfig) {
         let { sInFormula, sOutFormula } = inputConfig;
 
@@ -297,8 +309,119 @@ export default function BodyTable({
         }
       }
     });
+    Object.keys(formData[index]).forEach((key) => {
+      const inputConfig = allDoc.Inputs.find(
+        (input) =>
+          input?.iInvVar ===
+          allDoc.Body.find((h) => h.sFieldName === key)?.iInvVar
+      );
+      if (inputConfig && inputConfig.bAddtoNet) {
+        lineNetValue +=
+          Number(updatedValues[index][`${key.replace("input", "output")}`]) ||
+          0;
+      }
+      if (inputConfig && inputConfig.bAddtoStock) {
+        lineStockValue +=
+          Number(updatedValues[index][`${key.replace("input", "output")}`]) ||
+          0;
+      }
+    });
+    updatedValues[index].lineNet = lineNetValue + updatedValues[index].fGross;
+    updatedValues[index].lineStock =
+      lineStockValue + updatedValues[index].fGross;
+
     setFormData(updatedValues);
   };
+
+  React.useEffect(() => {
+    if (bifurcationApplied && formData && formData.length > 0) {
+      const bifurcatedTable = formData.map((formDataHeader) => {
+        let updatedValues = { ...formDataHeader };
+        let lineNetValue = 0;
+        let lineStockValue = 0;
+
+        Object.keys(formDataHeader).forEach((key) => {
+          const val = formDataHeader[key];
+          const inputConfig = allDoc.Inputs.find(
+            (input) =>
+              input?.iInvVar ===
+              allDoc.Body.find((h) => h.sFieldName === key)?.iInvVar
+          );
+
+          if (inputConfig) {
+            let { sInFormula, sOutFormula } = inputConfig;
+
+            const prepareFormula = (formula) => {
+              for (let i = 1; i <= 20; i++) {
+                formula = formula
+                  .replace(
+                    new RegExp(`\\bi${i}\\b`, "g"),
+                    updatedValues[`input${i}`] || 0
+                  ) // Ensure using updated values
+                  .replace(
+                    new RegExp(`\\bo${i}\\b`, "g"),
+                    updatedValues[`output${i}`] || 0
+                  );
+              }
+              return formula
+                .replace("%", "/100")
+                .replace("g", updatedValues.fGross);
+            };
+
+            if (sInFormula) {
+              const preparedInputFormula = prepareFormula(sInFormula);
+              try {
+                const inputValue = eval(preparedInputFormula);
+                updatedValues[key] = inputValue;
+              } catch (error) {
+                console.error("Error evaluating input formula: ", error);
+              }
+            }
+
+            if (sOutFormula) {
+              const preparedOutputFormula = prepareFormula(sOutFormula);
+              try {
+                const outputValue = eval(preparedOutputFormula);
+                updatedValues[`${key.replace("input", "output")}`] =
+                  outputValue;
+              } catch (error) {
+                console.error("Error evaluating output formula: ", error);
+              }
+            } else {
+              // Directly link input to output when no output formula
+              const outputKey = `${key.replace("input", "output")}`;
+              if (key.startsWith("input") && !sOutFormula) {
+                updatedValues[outputKey] = updatedValues[key]; // Update output with the latest input
+              }
+            }
+          }
+        });
+        Object.keys(formDataHeader).forEach((key) => {
+          const inputConfig = allDoc.Inputs.find(
+            (input) =>
+              input?.iInvVar ===
+              allDoc.Body.find((h) => h.sFieldName === key)?.iInvVar
+          );
+
+          if (inputConfig && inputConfig.bAddtoNet) {
+            lineNetValue +=
+              Number(updatedValues[`${key.replace("input", "output")}`]) || 0;
+          }
+          if (inputConfig && inputConfig.bAddtoStock) {
+            lineStockValue +=
+              Number(updatedValues[`${key.replace("input", "output")}`]) || 0;
+          }
+        });
+        updatedValues.lineNet = lineNetValue + updatedValues.fGross;
+        updatedValues.lineStock = lineStockValue + updatedValues.fGross;
+
+        return updatedValues;
+      });
+
+      setFormData(bifurcatedTable);
+      setbifurcationApplied(false);
+    }
+  }, [bifurcationApplied, formData, allDoc]);
 
   return (
     <>
@@ -651,9 +774,11 @@ export default function BodyTable({
         <AddCharges1
           isOpen={batchModal}
           handleCloseModal={handleBatchClose}
-          row={row}
+          rowName={row}
           setBifurcation={setBifurcation}
           bifurcation={bifurcation}
+          formData={formData}
+          setFormData={setFormData}
         />
       ) : null}
 

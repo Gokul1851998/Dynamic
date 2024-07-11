@@ -471,6 +471,7 @@ export default function PurchaseTable() {
 
                         return (
                           <TableRow
+                          key={row.iTransId + index}
                             hover
                             className={`table-row `}
                             onClick={(event) =>
@@ -482,7 +483,6 @@ export default function PurchaseTable() {
                             role="checkbox"
                             aria-checked={isItemSelected}
                             tabIndex={-1}
-                            key={row.iTransId}
                             selected={isItemSelected}
                             sx={{ cursor: "pointer" }}
                           >

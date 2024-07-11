@@ -21,6 +21,7 @@ import SaveIcon from "@mui/icons-material/Save";
 import DeleteIcon from "@mui/icons-material/Delete";
 import PrintIcon from "@mui/icons-material/Print";
 import CloseIcon from "@mui/icons-material/Close";
+import Footer from "./Footer";
 
 const buttonStyle = {
   textTransform: "none",
@@ -50,6 +51,7 @@ const DetailPage = ({ iUser, details, iTransId, action }) => {
   const [tabs, setTabs] = useState([]);
   const [open, setOpen] = useState(false);
   const [childData, setChildData] = useState([]);
+  const [getTableData, setGetTableData] = useState([])
 
   const handleClose = () => {
     setOpen(false);
@@ -117,6 +119,9 @@ const DetailPage = ({ iUser, details, iTransId, action }) => {
     setBody([]);
   };
 
+  const handleGetTableData = (data)=>{
+    setGetTableData(data)
+  }
   return (
     <>
       <Stack direction="row" spacing={1} padding={1} justifyContent="flex-end">
@@ -161,7 +166,7 @@ const DetailPage = ({ iUser, details, iTransId, action }) => {
       </Stack>
       <MDBCard
         className="text-center"
-        style={{ boxShadow: "0 4px 8px rgba(0, 0, 0, 0.3)", zIndex: 1 }}
+        style={{ boxShadow: "0 4px 8px rgba(0, 0, 0, 0.3)", zIndex: 1, borderRadius:2 }}
       >
         <MDBCardHeader>
           <MDBTabs className="card-header-tabs">
@@ -193,7 +198,9 @@ const DetailPage = ({ iUser, details, iTransId, action }) => {
         bodySettings={bodySettings}
         slNoSetting={slNoSetting}
         allDoc={allDoc}
+        handleGetTableData={handleGetTableData}
       />
+      <Footer allDoc={allDoc} getTableData={getTableData} />
       <Loader open={open} handleClose={handleClose} />
     </>
   );

@@ -100,3 +100,15 @@ export const getLogin = async (payload) => {
     }
   };
 
+  export const getExchangeRate = async (payload) => {
+    try {
+      const response = await axios.get(`${baseUrl}GetExchangeRate`, {
+        params: payload,
+      });
+      return response?.data;
+    } catch (error) {
+      console.log('GetExchangeRate',error);
+    }
+  };
+
+

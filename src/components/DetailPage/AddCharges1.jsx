@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import AddIcon from "@mui/icons-material/Add";
 import MuiAlert from "@mui/material/Alert";
 import CloseIcon from "@mui/icons-material/Close";
@@ -52,15 +52,18 @@ const Alert = React.forwardRef(function Alert(props, ref) {
 export default function AddCharges1({
   isOpen,
   handleCloseModal,
-  row,
+  rowName,
   setBifurcation,
   bifurcation,
+  formData,
+  setFormData
 }) {
   const [open, setOpen] = React.useState(false);
   const [warning, setWarning] = useState(false);
   const [message, setMessage] = useState("");
-  
-  console.log(row);
+  const [addCharges, setAddCharges] = useState(bifurcation);
+  const hasRunEffect = useRef(false);
+
   const handleCloseAlert = (event, reason) => {
     if (reason === "clickaway") {
       return;
@@ -76,13 +79,22 @@ export default function AddCharges1({
     display: isOpen ? "block" : "none",
   };
 
-  const iUser = Number(localStorage.getItem("userId"));
-
   useEffect(() => {
-    handleOpen();
+    if (!hasRunEffect.current) {
+      const fieldExists = addCharges.some((item) => item.fieldName === rowName);
+      if (!fieldExists) {
+        setAddCharges((prev) => [...prev, { fieldName: rowName }]);
+      }
+      hasRunEffect.current = true;
+    }
+  }, [rowName, setAddCharges]);
 
-    handleClose();
-  }, [isOpen]);
+  // Function to find the index of a field
+  const findIndex = (fieldName) => {
+    return addCharges.findIndex((item) => item.fieldName === fieldName);
+  };
+
+  const indexNum = findIndex(rowName);
 
   const buttonStyle = {
     textTransform: "none",
@@ -98,9 +110,40 @@ export default function AddCharges1({
     setOpen(true);
   };
 
-  const handleChanges = ()=>{
-    
-  }
+  const handleChanges = () => {
+    setBifurcation([...addCharges]);
+
+    const totalGross = formData.reduce((sum, row) => sum + row.fGross, 0);
+    let sumAllocated = 0; // To track the sum of allocated amounts
+    const updatedTableData = formData.map((row, index) => {
+      if (index === formData.length - 1) {
+        // For the last row, adjust to make the total match transAmount exactly
+        const newValue = addCharges[indexNum]["Trans Amount"] - sumAllocated;
+        return {
+          ...row,
+          [rowName]: parseFloat(newValue.toFixed(2)), // Ensure the last entry balances out exactly with two decimal places
+        };
+      } else {
+        // Calculate new value normally
+        let newValue = (row.fGross / totalGross) * addCharges[indexNum]["Trans Amount"];
+        newValue = parseFloat(newValue.toFixed(2)); // Format to two decimal places
+        sumAllocated += newValue; // Add to the running total of allocated amounts
+        return {
+          ...row,
+          [rowName]: newValue,
+        };
+      }
+    });
+    setFormData(updatedTableData)
+    handleCloseModal();
+  };
+
+  const handleAmount = (value) => {
+    let update = [...addCharges];
+    update[indexNum]["Trans Amount"] = value * addCharges[indexNum]["Exchange Rate"];
+    update[indexNum]["Base Amount"] = value * addCharges[indexNum]["Exchange Rate"];
+    setAddCharges(update);
+  };
 
   return (
     <div>
@@ -127,12 +170,17 @@ export default function AddCharges1({
                         api={getMasters}
                         iTag={13}
                         label="Currency"
+                        index={indexNum}
+                        value={addCharges}
+                        setValue={setAddCharges}
                       />
                     </MDBCol>
                     <MDBCol>
                       <MDBInput
+                        readOnly
                         size="small"
                         id={`form3Example1`}
+                        value={addCharges[indexNum]?.["Exchange Rate"] || ""}
                         label="Exchange Rate"
                         type="number"
                         autoComplete="off"
@@ -144,15 +192,24 @@ export default function AddCharges1({
                       <MDBInput
                         size="small"
                         id={`form3Example2`}
+                        value={addCharges[indexNum]?.["Amount"] || ""}
                         label="Amount"
                         type="number"
                         autoComplete="off"
+                        onChange={(e) => {
+                          let update = [...addCharges];
+                          update[indexNum]["Amount"] = e.target.value;
+                          setAddCharges(update);
+                        }}
+                        onBlur={(e) => handleAmount(e.target.value)}
                       />
                     </MDBCol>
                     <MDBCol>
                       <MDBInput
+                        readOnly
                         size="small"
                         id={`form3Example3`}
+                        value={addCharges[indexNum]?.["Trans Amount"] || ""}
                         label="Trans Amount"
                         type="number"
                         autoComplete="off"
@@ -162,8 +219,10 @@ export default function AddCharges1({
                   <MDBRow className="mb-4">
                     <MDBCol>
                       <MDBInput
+                        readOnly
                         size="small"
                         id={`form3Example4`}
+                        value={addCharges[indexNum]?.["Base Amount"] || ""}
                         label="Base Amount"
                         type="number"
                         autoComplete="off"
@@ -178,7 +237,11 @@ export default function AddCharges1({
                   padding={2}
                   justifyContent="flex-end"
                 >
-                  <Button variant="contained" style={buttonStyle}>
+                  <Button
+                    onClick={handleChanges}
+                    variant="contained"
+                    style={buttonStyle}
+                  >
                     Load
                   </Button>
                   <Button
